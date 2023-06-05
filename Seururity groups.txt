@@ -1,0 +1,24 @@
+Seururity groups
+----------------
+
+
+LOAD BALANCER===========http/https-------80/443------anywhere(0.0.0.0/0)
+
+BASTION=================ssh---------------22---------My ip
+
+APPLICATION=============ssh---------------22---------bastion-sg
+                        http/https-------80/443-------loadbalancer-sg
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,33 @@
+port number and versions and codes
+------------------------
+
+Apache----80
+jenkins----8080
+nexus------8081
+nginx------80
+tomcat-----8080
+grfana-----3000
+promethius---9090
+node_exporter---9100
+Elasticsearch----9200 
+Kibana----5601 · 
+Logstash---5044
+rds--------3306
+ssh-------22
+
+
+
+
+http status code = 100-199 - informational 
+http status codes = 200-299 - success 
+http status code = 400-499 - issue at client and server side permission issue 
+http status code = 500-599-internal Server Error (server issue)
+
+
+aws-----------------2
+doker--------------23.xxx
+jenkins-----------2.357 
+maven-----------3.0.5
+kubernetes------1.23
+java--------17.xxx
+
