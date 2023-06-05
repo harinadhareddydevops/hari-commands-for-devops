@@ -4,6 +4,7 @@ port number and versions and codes
 Apache----80
 jenkins----8080
 nexus------8081
+sonarqube---9000
 nginx------80
 tomcat-----8080
 grfana-----3000
