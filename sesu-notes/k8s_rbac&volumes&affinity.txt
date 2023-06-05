@@ -1,0 +1,220 @@
+By default containers are ephermal or not persistent.
+when container stopped and restarted data will be loss.
+as same applies to k8s. when a pod is deleted all the data associated with that pod is deleted.
+we will be looking how to persist the data even if the pods get deleted using k8s volumes with complete hands on.
+without any further delay lets get started...
+
+let us start with our problems first so that we understand the volumes better.
+
+problem1:
+---------
+create the pods with deploy or replicaset. k8s make sure to maintain the given number of replicas. lets say we created 3 replicas of application and we have written some data to pods.if any replica or pod goes down. k8s depoy created another pod to maintain the acttual state which is 3 in our case but this new pod gets created with clean slate and data we have written previoulsy to the pod is deleted.
+so in this case data is lost when the pod is deleted or restarted. which leads to data loss
+
+problem2:
+---------
+when we have multiple replicas of the same application how do they share same data because by default the data is stored in the container and not accessible to others pods that means data is not shared across pods. 
+
+those two main problesm that we come across where we store the data in k8s. thats where k8s volumes comes into picture
+with k8s volumes we can solve about two problesm.
+1. sharing the data across the pods
+2. persisting the data even if the pod restart/deleted or node goes down.
+
+in simple words volume is a dir with some data in it and the data is accessible to the containmers in a pod.
+
+
+emptyDir: pod-level(when container restarts the data will be persist)
+=========
+when pod goes down and up and running the data will be lost
+store data in this path when we use emptyDir volume type == /var/lib/kubelet/pods/pod-id/empty-dir/
+
+hostPath: node-level(when pod restarts/deleted the data will be persist)
+========
+when node goes down and up and running the data will be lost.
+
+persistentVolumes --- configure access modes, capacity, reclaim policy...etc
+================
+access modes
+-------------
+ReadWriteMany  == the volume can be mounted as read-write by many nodes.
+ReadWriteOnce  == the volume can be mounted as read-write by single node.
+ReadOnlyOnce   == the volume can be mounted as read-only by single node.
+ReadOnlyMany   == the volume can be mounted as read-only by many nodes.
+ReadWriteOncePod == the volume can be mounted as read-write by a single Pod.
+
+
+persistentVolumeReclaimPolicies
+--------------------------------
+Recycle -- basic scrub  (pvc is deleted, pv wont be delete it will do the basic scrub and will be available for new claims)
+Delete  -- associated storage asset such as AWS EBS, Azure Disk volume is deleted (pvc is deleted and pv also deleted)
+Retain  -- manual reclaimation (pvc is deleted, pv wont be deleted its avaibale for same claim only)
+
+
+persistentVolumeClaims --- configure access modes, capacity, storag class name...etc
+======================
+access modes
+-------------
+ReadWriteMany  == the volume can be mounted as read-write by many nodes.
+ReadWriteOnce  == the volume can be mounted as read-write by single node.
+ReadOnlyOnce   == the volume can be mounted as read-only by single node.
+ReadOnlyMany   == the volume can be mounted as read-only by many nodes.
+ReadWriteOncePod == the volume can be mounted as read-write by a single Pod.
+
+Storage class:
+--------------
+provisioners are used for creating pvs   ==    local/third part means external cloud storages are like aws,azure,gcp.
+
+volumeBindingMode -- how exactly a pv will be created
+----------------- 
+WaitForFirstConsumer   == the pv is not created until the pvc is used by one of the pod
+Immediate              == the pv is created immediately when the pvc is created.
+
+reclaimPolicy
+=============
+Delete     == pvc is deleted and pv is also deleted (delete manually the actual data)
+Retain     == pvc is deleted and the pv is not deleted.
+
+
+
+Role and RoleBinding
+====================
+Role is a set of rules that represent a set of purely additive permissions
+Role is used to grant access to resoures within a single namespace
+RoleBindings binds the permissions defined in a role to a user or set of users.
+
+Rules:
+=======
+1. apiGroups 
+   -- core api groups
+   -- apps
+   -- Networking
+   -- extentions...etc
+2. resources
+   -- pods
+   -- deployments
+   -- daemonsets...etc
+3. resourceNames:
+   -- 
+4. verbs
+   -- get
+   -- list
+   -- watch
+   -- update
+   -- delete
+
+ClusterRole and ClusterRoleBinding
+==================================
+A ClusterRole which has a cluster-wide scope. ClusterRole can also be used to grant access to:
+define permissions on namespaced resources and be granted within individual namespaces(s)
+define permissions on namespaced resources and be granted across all namespaces
+define permissions on cluster-scoped resources.
+
+ClusterRoleBinding references a ClusterRole to grant the permissions to namespaced resources defined in the ClusterRole
+This allows administrators to define a set of common roles for the entire cluster, then reuse them with multiple namespaces
+
+
+Technique Summary
+-------------------
+Taints and Tolerations == Allowing a Node to control which pods can be run on them and which pods will be repelled.
+NodeSelector           == Assigning a Pod to a specific Node using Labels
+Node Affinity          == Similar to NodeSelector but More expressive and flexible such as adding “Required” and “Preferred” Rules
+Pod Affinity and Anti-Affinity == Co-locating Pods or Placing Pods away from each other based on Affinity and Anti-Affinity Rules
+
+
+affinity: If specified, the pod's scheduling constraints
+
+Affinity is a group of affinity scheduling rules.
+
+nodeAffinity (object)
+
+Describes node affinity scheduling rules for the pod.
+
+podAffinity (object)
+
+Describes pod affinity scheduling rules (e.g. co-locate this pod in the same node, zone, etc. as some other pod(s)).
+
+podAntiAffinity (object)
+
+Describes pod anti-affinity scheduling rules (e.g. avoid putting this pod in the same node, zone, etc. as some other pod(s)).
+
+
+Node Affinity  depends on nod labels
+=============
+There are two types of Node Affinity rules:
+
+1. Required
+2. Preferred
+
+Required rules must always be met for the scheduler to place the pod.
+Preferred rules the scheduler will try to enforce the rule, but doesn’t guarantee the enforcement.
+
+
+pod anti affinity   == pod labels
+=================
+Let's assume we have a Redis cache for web applications and we need to run three replicas of Redis but we need to make sure that each replica runs on a different node, we make use of pod anti-affinity here.
+
+Observations
+=============
+if pod labels match to anti affinity rules then it will schedule pods on  nodes of each pod in each node at one time
+
+
+pod affinity
+============
+if pod labels does not match to affinity rules then it wont schedule pods on nodes. pods went to pending state
+
+if pod labels match to affinity rules then it will schedule pods on any one node. 
+
+
+
+ingress-nginx controller
+=========================
+We declare which request should go to which service so write an ingress rules that declares how you would like users to be routed to a service. we call these mappings as ingress rules but writing these ingress rules is not enough there must be component that reads these rules and process them that component is called ingress controller.
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.5.1/deploy/static/provider/aws/deploy.yaml
+
+kubectl get pods --namespace=ingress-nginx
+
+
+For curl command 
+=================
+k run curl --image=alpine/curl --rm -it -- sh
+
+
+
+
+kubectl get pv --sort-by=.spec.capacity.storage
+
+kubectl get pv --sort-by=.spec.capacity.storage -o=custom-columns=NAME:.metadata.name,
+
+kubectl config view --kubeconfig=my-kube-config -o jsonpath="{.contexts[?(@.context.user=='aws-user')].name}"
+
+
+kubectl get nodes -o=jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.capacity.cpu}{"\n"}{end}'
+
+[or]
+
+kubectl get nodes -o=custom-columns=NODE_NAME:.metadata.name,CPU_COUNT:.status.capacity.cpu
+
+kubectl get nodes --sort-by=.status.capacity.cpu
+
+kubectl get nodes --sort-by=.metadata.name
+
+
+kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}'
+
+kubectl get nodes -o=jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}'
+
+kubectl get deploy -n admin2406  -o=custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.spec.replicas,NAMESPACE:.metadata.namespace
+
+DEPLOYMENT   CONTAINER_IMAGE   READY_REPLICAS   NAMESPACE
+deploy1      nginx             1                admin2406
+
+
+etcd backup
+------------
+etcdctl snapshot save --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --endpoints=127.0.0.1:2379 --key=/etc/kubernetes/pki/etcd/server.key /opt/snapshot-pre-boot.db
+
+
+restore
+---------
+etcdctl snapshot restore --data-dir /var/lib/etcs-from-backup /opt/snapshot-pre-boot.db

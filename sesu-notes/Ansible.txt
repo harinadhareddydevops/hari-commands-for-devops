@@ -1,0 +1,1021 @@
+---
+Configuration Management
+========================
+Ansible is an open source, a Configuration Management Tool and Deployment tool, maintained by Redhat. This is process of configuring remote servers from one point of control.
+
+Advantages
+==========
+1) Provisioning of servers
+  The applications that should be installed on server can be done very quickly from a single centralized location.
+
+2) Idempotent 
+  Configuration management tools are used to bring the server to a particular state, called as desired state. If a server already in the desired state, configuration management tools will not reconfigure that server.
+
+Note: Cofiguration management tools cannot be used for installing OS from the scratch. They can be used only for managing the applications on top of the OS.
+
+COnfigutaion management tools -  Ansible, chef, puppet, salt etc
+
+Ansible  -- It is a open source configuration management tool, created using Python.
+
+Main machine in which anisble is installed, is called as controller.
+Remote severs that Ansible configures, are called as managed nodes.
+
+Ansible uses agent less policy for configures remote servers ie Ansible is installed only on 1 machine, and we do not require any client side software to be installed on the remote serers. Follows Push based architecture for sending configurations.
+
+
+Tools like Puppet and Chef are pull based.
+===========================================
+Agents on the server periodically checks for the configuration information from central server (Master).
+
+Ansible and Saltstack is push based.
+===================================
+Central server pushes the configuration information on target servers. You control when the changes are made on the servers.
+
+
+How Ansible works?
+===================
+Ansible works on existing SSH connection.
+Ansible doesn't not require to open any network port or no need required any agent installation.
+We need enable the password less authentication (Key exchanging)
+
+
+Ansible configuration file(/etc/ansible/ansible.cfg)
+====================================================
+If we run any ansible command first it will check the ansible configuration file. The default path is /etc/ansible/ansible.cfg
+Based on requirement we can change/update the ansible configuration file. By default all parameters are commented. If you want to change the behavior update uncomment to comment. The default configuration file contains the parameters like inventory, library,
+module locations...etc.
+
+If you want to have your Ansible hosts file in another location, then you can set this environment variable:
+============================================================================================================
+export ANSIBLE_CONFIG=/home/devops/custom_ansible_config
+
+
+Why do we use multiple ansible configuration files?
+===================================================
+Our application may have different web servers, application servers and db servers separately. Each will have different users and different inventory files. If we want to perform automation for specific servers it’s a challenge so in that time we can use multiple configuration files.
+
+
+Inventory file(/etc/ansible/hosts)
+==================================
+Ansible's inventory hosts file is used to list and group your servers. Its default location is /etc/ansible/hosts.
+In Inventory file you can mention IP address or Hostnames also.
+Some important points in Inventory file.
+- Comments begin with the '#' character
+- Blank lines are ignored
+- Groups of hosts are delimited by [header] elements
+- You can enter hostnames or ip addresses
+- A hostname/ip can be a member of multiple groups
+- Ungrouped hosts are specifying before any group headers, like below
+
+Inventory Parameters
+====================
+ansible_connection=ssh/winrm/localhost
+ansible_port=22/5986
+ansible_user=root/administrator
+ansible_ssh_pass=<<Password for node>>
+
+for localhost
+localhost ansible_connection=localhost
+
+
+If you want to have your Ansible hosts file in another location, then you can set this environment variable:
+============================================================================================================
+export ANSIBLE_HOSTS=/home/devops/custom_ansible_hosts
+
+Or you can specify the Ansible hosts location when running commands with the --inventory-file= (or -i) flag:
+============================================================================================================
+ansible all --inventory-file=/home/devops/custom_ansible_hosts -m ping
+
+
+Examples of Sample Inventory Files
+==================================
+1. Hostname, Username and connection
+-------------------------------------
+18.191.209.103     ansible_user=ansadmin   ansible_connection=ssh
+13.59.124.116      ansible_user=ansadmin   ansible_connection=ssh
+
+Testing: ansible all -m ping
+
+2. Alias name, Hostname, Username and connection
+-------------------------------------------------
+s1 ansible_host=18.191.209.103     ansible_user=ansadmin   ansible_connection=ssh
+s2 ansible_host=113.59.124.116     ansible_user=ansadmin   ansible_connection=ssh
+
+Testing: ansible s1,s2 -m ping [OR] ansible all -m ping
+
+3. Passing password without exchanging key
+------------------------------------------
+18.191.209.103  ansible_user=ansadmin 
+13.59.124.116   ansible_user=ansadmin ansible_ssh_pass=ansadmin
+
+Testing: ansible all -m ping
+
+4. Passing private key
+----------------------
+18.191.209.103  ansible_user=ansadmin 
+13.59.124.116   ansible_user=ansadmin  ansible_ssh_private_key_file=/home/ansadmin/<private-key>
+
+Testing: ansible all -m ping
+
+5. Groups
+----------
+[webservers]
+s1 ansible_host=18.191.209.103    ansible_user=ansadmin   ansible_connection=ssh
+s2 ansible_host=13.59.124.116     ansible_user=ansadmin   ansible_connection=ssh
+
+Testing: ansible all -m ping [OR] ansible webservers -m ping [OR] 
+
+To run specific server (s2) in the group: ansible webservers[1] -m ping -i ./myhosts
+----------------------------------------
+To run range of servers (s1-s2) in the group: ansible webservers[0:1] -m ping -i ./myhosts
+---------------------------------------------
+
+6. Group with Vars
+------------------
+[webservers]
+s1 ansible_host=18.191.209.103
+s2 ansible_host=18.219.5.26
+[webservers:vars]
+ansible_user=ansadmin
+ansible_connection=ssh
+
+Testing: ansible all -m ping [OR] ansible webservers -m ping
+
+To run specific server (s1) in the group: ansible webservers[1] -m ping -i ./myhosts
+-----------------------------------------
+To run range of servers (s1-s2) in the group: ansible webservers[0:1] -m ping -i ./myhosts
+---------------------------------------------
+
+7. Multiple Groups with Vars
+-----------------------------
+[webservers]
+s1 ansible_host=18.191.209.103
+s2 ansible_host=18.219.5.26
+
+[webservers:vars]
+ansible_user=ansadmin
+ansible_connection=ssh
+
+[dbservers]
+d1 ansible_host=18.191.209.103
+d2 ansible_host=18.219.5.26
+
+[dbservers:vars]
+ansible_user=ansadmin
+ansible_connection=ssh
+
+Testing: ansible all -m ping [OR] ansible webservers -m ping [OR] ansible dbservers -m ping
+
+To run specific webserver (s1) in the group: ansible webservers[1] -m ping -i ./myhosts
+To run range of webservers (s1-s2) in the group: ansible webservers[0:1] -m ping -i ./myhosts
+To run specific webserver (d1) in the group: ansible dbservers[1] -m ping -i ./myhosts
+To run range of webservers (d1-d2) in the group: ansible dbservers[0:1] -m ping -i ./myhosts
+
+
+8. Merging groups of groups
+---------------------------
+[webservers]
+s1 ansible_host=18.191.209.103
+s2 ansible_host=18.219.5.26
+
+[dbservers]
+d1 ansible_host=18.191.209.103
+d2 ansible_host=18.219.5.26
+
+[webdb:children]
+webservers
+dbservers
+
+[webdb:vars]
+ansible_user=ansadmin
+ansible_connection=ssh
+
+Testing: ansible all -m ping [OR] ansible webservers -m ping [OR] ansible dbservers -m ping
+
+To run specific webserver (s2) in the group: ansible webservers[1] -m ping -i ./myhosts
+To run range of webservers (s1-s2) in the group: ansible webservers[0:1] -m ping -i ./myhosts
+To run specific webserver (d1) in the group: ansible dbservers[0] -m ping -i ./myhosts
+To run range of webservers (d1-d2 && s1-s2) in the different groups: ansible dbservers[0:1]: webservers[0:1] -m ping -i ./myhosts
+
+
+--------------------------------------------------------------------------------------------------------------------------------------
+
+$ ls -la     ( to see the list in the current machine )
+
+$ ansible all  -a  'ls  -la'    ( you will get the list of the files in all managed nodes )
+
+
+Ansible performs remote configurations in 2 ways
+================================================
+1) using adhoc commands
+2) using play books
+
+
+Ansible ad-hoc/ Arbitary Commands
+=================================
+Ansible ad-hoc commands are powerful managing complex configurations using ad-hoc commands are critical job rather than we should use play books. Generally we can use ad-hoc commands for one time operation.
+Ex:
+1. Checking server status, getting data one time …..Etc.
+2. Just validate the uptime of 1 to 200 remote servers
+3. Just get the disk space of remote hosts
+4. Ping and validate if the server is alive and responds
+5. shutdown multiple remote hosts at a single command
+ Ad-hoc commands are one of the simplest ways of using Ansible. These are used when you want to issue some commands on a server or bunch of servers. The ad-hoc commands are not stored for future use, but it represents a fast way to interact with the desired servers. The Ansible ad-hoc command uses the /usr/bin/ansible command-line tool to automate a single task on one or more managed nodes. The Ad-hoc commands are quick and easy, but they are not re-usable. The Ad-hoc commands demonstrate the simplicity and power of Ansible.
+
+Syntax:
+=======
+ansible <hosts> [-m <module_name>] -a <"arguments"> -u <username> [--become]
+
+Hosts: It can be an entry in the inventory file. For specifying all hosts in the inventory, use all or "*".
+module_name: It is an optional parameter. There are hundreds of modules available in the Ansible, such as shell, yum, apt, file, and copy. By default, it is the command.
+arguments: We should pass values that are required by the module. It can change according to the module used.
+username: It specifies the user account in which Ansible can execute commands.
+become: It's an optional parameter specified when we want to run operations that need sudo privilege. By default, it becomes false.
+
+Examples
+=========
+ansible all -m ping -i myhosts
+ansible -i myhosts all -m shell -a date
+ansible -i myhosts all -m shell -a 'uptime'
+ansible -i myhosts all -m shell -a 'service sshd status' –b
+ansible -i myhosts all -a "ls /tmp"
+ansible -i myhosts all -m copy -a "src=demo.txt dest=/home/devops"
+ansible -i myhosts all -m file -a "path=/home/devops/kumar-k8s state=directory"
+ansible -i myhosts all -m file -a "path=/home/devops/kumar-k8s state=absent"
+ansible -i myhosts all -m user -a "name=kumar group=devops createhome=yes password=kumarreddy" -b
+ansible -i myhosts all -m yum -a "pkg=httpd state=latest" -b
+ansible -i myhosts all -m service -a "name=httpd state=started" -b
+ansible -i myhosts all -m setup
+
+Important modules in ansible
+============================
+
+1) command - This module is used for executing basic linux commands on managed nodes.
+2) shell -  This module is used to execute commands which involved redirection and piping and to execute shell scripts on managed nodes.
+3) ping  --  This module is used to check if the remote server is pingable or not.
+4) user --  This module is used for user management like create user, setting password, assign home directory  etc
+5) copy  --  This module is used to copy the files and folders from controller to managed nodes
+6) fetch  --  This module is used to copy files and folder from managed nodes to controller
+7) file  --  This module is used for creating or deleting files and folders on managed nodes.
+8) stat  --  Used to capture detailed information about files and folders present in managed nodes.
+9) debug --  Used to display output of any module
+10) apt   --  Used for performing package management on managed nodes ie installing softwares / upgrading repositories  etc . It works on ubuntu, debain flavours of linux. 
+11) yum  --  similar to apt module. It works on Red hat linux, centos etc
+12) git  --  used to perform git version controlling on managed nodes
+13) replace -- This is used to replace specific text in configuration file with some other text.
+14) service  -- used for starting / stoping / restarting services on managed nodes.
+15) include  --  Used for calling child play books  from parent play book
+16) uri    -- useful in checking  if remote url is reachable or not.
+17) docker_container  --  used to execute docker  commands related to container management on managed nodes
+18) docker_image  --  used to execute commands related to docker images on managed nodes.
+19) docker_login  --  used to login to docker hub from managed nodes.
+20) setup   --  used to capturing system information related to the managed nodes.
+
+
+Ansible Command Vs Shell modules
+=================================
+A typical example is the Ansible modules Shell and Command. In the most use cases both modules lead to the same goal. Here are the main differences between these modules.
+With the Command module the command will be executed without being proceeded through a shell. As a consequence some variables like $HOME are not available. And also stream operations like <, >, | and & will not work.
+The Shell module runs a command through a shell, by default /bin/sh. This can be changed with the option executable.
+The command module is more secure, because it will not be affected by the user’s environment.
+
+
+
+Ansible-Facts/Gathering Facts
+==============================
+Ansible gather certain information from remote/managed nodes this process is called ansible-facts OR Gathering facts. Ansible uses setup module to discover this information automatically. Sometime this information is required in playbook as this is dynamic 
+information fetched from remote systems. Ansible-facts OR Gathering facts is a time consuming process in Ansible as it has to gather information from all the hosts listed in your inventory file. We can avoid this situation and speed up our play execution by
+specifying gathering_facts to false in playbook.
+
+There are two types of facts.
+============================
+1. Default Facts.
+2. Custom Facts
+
+Default Facts 
+============
+Facts are nothing but information about Managed Nodes like: os distribution, release, processor, python etc... The task of collecting this remote system information is called as Gathering Facts, and collected/Gathered information is called facts or variable. You can Gather/Collect Facts using setup module in Ad-hoc commands. 
+Note: Ansible Playbooks call this setup module by default to perform Gathering Facts task.
+
+Custom Facts
+============
+- To get user defined required tasks
+- Need to get the server versions like git, httpd, weblogic …. Etc.
+- To identify prod/non-prod/dev/qa servers.
+
+Step-1: Create /etc/ansible/facts.d on Managed Nodes
+Step-2: Inside of facts.d place one more custom facts files with extension as .fact
+Step-3: The output of fact file should be a json.
+Step-4: The fact file should have execution permission.
+
+Example:
+=======
+#!/bin/bash
+
+git_ver=$(git --version | awk '{ print $3 }')
+httpd_ver=$(httpd -version | awk ' NR==1 {print $3}')
+
+cat << EOF
+{ "Git_Version": "$git_ver"
+"httpd_version": "$httpd_ver"
+}
+
+EOF
+
+Example:
+========
+ansible -i myhosts all -m setup
+ansible -i myhosts all -m setup -a 'filter=*ipv4*'
+ansible -i myhosts all -m setup -a 'filter=ansible_domain'
+ansible -i myhosts all -m setup -a 'filter=ansible_nodename'
+ansible -i myhosts all -m setup -a 'filter=ansible_mounts'
+
+
+Why Ansible is idempotent?
+==========================
+If we run commands more than one time it will run but it won’t effect. If we perform ‘n’ number of operations it won’t effect so it’s called ansible is idempotent.
+Example: 
+--------
+Installing packages more than one time it’s not effect it will run successfully.
+
+
+Ansible Modules
+===============
+Ansible modules are a small set of programs that perform a specific task. Modules can be used to automate a wide range of tasks. which can be used from the command line or in a playbook task.
+Modules in Ansible are considered to be idempotent or in other words, making multiple identical requests has the same effect as making a single request.
+The modules also referred to as task plugins or library plugins in the Ansible. Ansible ships with several modules that are called module library, which can be executed directly or remote hosts through the playbook.
+Users can also write their modules. These modules can control like services, system resources, files, or packages, etc. and handle executing system commands.
+Each module supports taking arguments. Mainly all modules take key=value arguments, space delimited.
+Some module takes no arguments, and the shell/command modules take the string of the command which you want to execute. Technically, all modules return JSON format data
+Modules should be idempotent and avoid making any changes if they detect that the current state matches the desired final state. When using Ansible playbooks, these modules can trigger "change events" in the form of notifying "handlers" to run additional tasks.
+
+There are 2 types of modules in Ansible:
+1. Core modules
+2. Extras modules
+
+Core Modules
+============
+These are modules that the core Ansible team maintains and will always ship with Ansible itself. They will also receive a slightly higher priority for all requests than those in the “extras” repos. The source of these modules is hosted by Ansible on
+GitHub in the Ansible-modules-core.
+
+Extras Modules
+===============
+These modules are currently shipped with Ansible but might be shipped separately in the future. They are also mostly maintained by the Ansible Community. Non-core modules are still fully usable but may receive slightly lower response rates for issues and pull requests.Popular “extras” modules may be promoted to core modules over time. The source for these modules is hosted by
+Ansible on GitHub in the Ansible-modules-extras.
+
+
+Ansible Playbooks
+=================
+Ansible playbook is YAML (Yet Another Markup Language) document, which as set of plays. A play is specific task. It uses the /usr/bin/ansible-playbook command to execute the playbooks.
+Ansible playbooks are a way to send commands to remote computers in a scripted way. Instead of using Ansible commands individually to remotely configure computers from the command line, you can configure entire complex environments by passing a script to one or more systems. Ansible playbooks are written in the YAML data serialization format.
+
+Playbook is a single YAML file, containing one or more ‘plays’ in a list.
+Plays are ordered sets of tasks to execute against host servers from your inventory file.
+Play defines a set of activities (tasks) to be run on hosts.
+Task is an action to be perform on the host.
+
+Examples are
+============
+a) Execute a command
+b) Run a shell script
+c) Install a package
+d) Shutdown/Restart the hosts.
+Playbooks start with the YAML three dashes (---) and end with …
+Each play has first hosts, variables, and tasks
+
+Playbook Sections
+=================
+Ansible playbooks are divided into 4-sections.
+----------------------------------------------
+1. Target Section
+2. Variable Section
+3. Task Section.
+4. Handler Section.
+
+Target Section: In this section we have defined hosts against which playbook task has to execute.
+Variable Section: In this section we have defined the variables used by plays.
+Task Section: In this section we can list of all modules that we need to run in the order.
+Handler Section: Handlers are ansible plays this are executed only when someone notifies.
+
+
+FileName: pingServers.yml
+---
+- hosts: all
+  gather_facts: no
+  remote_user: ansible
+
+  tasks:
+  - name: Test connection
+    ping:
+    remote_user: ansible
+...
+
+#hosts: The tasks will be executing in specified group of servers.
+#name: which is the task name that will appear in your terminal when you run the
+playbook.
+#remote_user: This parameter was formerly called just user. It was renamed in Ansible
+1.4 to make it more distinguishable from the user module (used to create users on
+remote systems).
+Remote users can also be defined per task.
+
+
+Variables:
+===========
+There are different ways in which you can define variables in Ansible. The simplest way is by using the vars section of a playbook. The below example defines a variable name called package and it is using in a task called Install a Package.
+
+1. Runtime Vars  ==> ansible-playbook groupVariablesPlaybook.yaml --extra-vars package=unzip
+2. Playbook Vars ==> Declare vars Inside playbook
+3. Group Vars    ==> Declare vars at group level. these vars will be accessable in any playbooks or template for that group.
+                     wherever you have host inventory in same dir we can create group_vars files under one directory called group_vars.
+                     group_vars should be under /etc/ansible like /etc/ansible/group_vars. group_vars files name should be your group name like
+                     /etc/ansible/group_vars/all.yaml(means all servers) [or] /etc/ansible/group_vars/<GroupName>.yaml(means particular group)
+4. Host Vars     ==> Declare vars at host level. these vars will be accessable in any playbooks or template for that host.
+                     wherever you have host inventory in same dir we can create host_vars files under one directory called host_vars.
+                     host_vars should be under /etc/ansible like /etc/ansible/host_vars. host_vars files name should be your group name like
+                     /etc/ansible/host_vars/all.yaml(means all servers) [or] /etc/ansible/host_vars/<hostip/name>.yaml(means particular server)
+
+FileName: varsPlaybook.yaml
+---------------------------
+- hosts: localhost
+  become: true
+  vars:
+    package: vim
+
+  tasks:
+  - name: Install a Package
+    apt:
+      name: "{{package}}"
+      state: latest
+...
+
+
+Group Variables and Host Variables
+===================================
+You can define custom variables for each group and host that you define in host inventory. These variables are known as group_vars for groups and host_vars for hosts. Any variables that you define for a host or a group can be used in both playbooks and templates.
+Both group_vars and host_vars are defined in their own folders, ‘groups_vars’ and ‘host_vars’, respectively.
+
+For group_vars, the file must be named exactly the same as the group.
+For host_vars, the file has to be named exactly the same as the host.
+
+Say you have a group ‘appServers’ and you want to define a variable for all of them. Create an empty file first in the group_vars folder in the root of your ansible directory
+
+(where you put you playbooks or in ansible home(installation) directory): /etc/ansible/group_vars/
+group_vars/all.yaml [OR] appServers.yaml [appServers is the servers group name in hostsfile/inventory]
+
+(where you put you playbooks or in ansible home(installation) directory): /etc/ansible/host_vars/
+host_vars/all.yaml [OR] 172.18.0.1.yaml [172.18.0.1 is the server ip in hostsfile/inventory]
+
+Then add a variable to the file:/etc/ansible/group_vars/all.yaml [OR] appServers.yaml
+-------------------------------------------------------------------------------------
+package=apache2
+
+Then add a variable to the file:/etc/ansible/host_vars/all.yaml [OR] 172.18.0.1.yaml
+-------------------------------------------------------------------------------------
+package=nginx
+
+This makes the variable ‘package’ available to all playbooks that run on this group. I’ll show you how to use these in your playbook in a bit. Say you have one group appServer you want to execute a certain action in a playbook by using varible defined in group_vars. The following is an action you could use, using a group_var definition:
+
+---
+- hosts: localhost
+  become: true
+
+  tasks:
+  - name: Install a Package
+    apt:
+      name: "{{package}}"
+      state: latest
+...
+
+
+Variables Precendence:
+======================
+Runtime vars     ===> Try in Runtime --extra-vars package=apache2
+Playbook vars    ===> Declare vars inside playbook by using vars field and call {{package}}
+Host vars        ===> Declare vars /etc/ansible/host_vars/all.yaml [OR] 172.18.0.1.yaml
+Group vars       ===> Declare vars /etc/ansible/group_vars/all.yaml [OR] appServers.yaml
+  Specific group ===> Declare vars /etc/ansible/group_vars/appServers.yaml
+  all.yaml       ===> Declare vars /etc/ansible/group_vars/all.yaml
+
+
+Ansible Handlers 
+=================
+Handlers are special task that run at the end of a play if notified by another task. If a configuration file gets changed notify a service restart task it needs to run. Even if handler is called multiple times in the tasks section, it will be executed only once.
+
+
+Ansible Template module
+=======================
+Ansible Template module is little Different form COPY module. Instead of copy file from control machine to destination machine, it will supply the variable values first to the file, after that it will copy the file to destination. So using ansible template module we can copy dynamic files to the target server. 
+Whenever you have dynamic values, ansible has a templating system. That templating system is Jinja. Jinja templates are the files with extension ‘.j2’. Most of the time we use them to replace configuration files or place some documents on the remote server. We can also perform conditional statements, loops, filters for transforming the data using ansible templates.
+
+---
+- hosts: localhost
+  become: true
+  
+  tasks:
+  - name: Install apache2
+    apt:
+      name: apache2
+      state: present
+
+  - name: Copy apache2.conf
+    template:
+      src: apache2.conf.j2
+      dest: /etc/apache2/apache2.conf
+    notify:
+    - Restart apache2
+
+  - name: Copy index.html
+    copy:
+      src: index.html
+      dest: /var/www/html
+      
+  handlers:
+  - name: Restart apache2
+    service:
+      name: apache2
+      state: restarted
+...
+
+Examples
+========
+Hostdetails.txt.j2
+Host Details
+============
+Ansible system version is ===============>>> {{ ansible_system }}
+Ansible OS family is      ===============>>> {{ ansible_os_family }}
+Ansible server FDQN is    ===============>>> {{ ansible_fqdn }}
+Ansible hostname is       ===============>>> {{ ansible_hostname }}
+Ansible domain is         ===============>>> {{ ansible_domain }}
+Ansible distribution is   ===============>>> {{ ansible_distribution }}
+Ansible BIOS date is      ===============>>> {{ ansible_bios_date }}
+Ansible BIOS version is   ===============>>> {{ ansible_bios_version }}
+Ansible architecture is   ===============>>> {{ ansible_architecture }}
+ansible_managed is        ===============>>> {{ ansible_managed }}
+local_ip is               ===============>>> {{ ansible_default_ipv4["address"] }}
+local_user is             ===============>>> {{ ansible_user }}
+template_host is          ===============>>> {{ template_host }}
+template_uid is           ===============>>> {{ template_uid }}
+template_path is          ===============>>> {{ template_path }}
+template_fullpath is      ===============>>> {{ template_fullpath }}
+template_run_date is      ===============>>> {{ template_run_date }}
+
+
+Ansible Tags
+============
+By using ansible tags we can execute the specific task in the ansible playbook. When we execute a playbook, we can filter tasks based on the tags in 2 ways.
+1. Command line, with the -tags or -skip-tags options.
+2. Ansible configuration settings, with the TAGS_RUN and TAGS_SKIP options.
+
+Tags are useful to be able to run a specific without running the whole playbook. We can use tags on play and task level.
+
+---
+- hosts: localhost
+  become: yes
+
+  tasks:
+  - name: Install Apache HTTP server on RedHat Server
+  tags:
+  - install
+  yum:
+    name: httpd
+    state: present
+
+  - name: Install Apache HTTP server on Ubuntu server
+  tags:
+  - install
+  - start
+  apt:
+    name: apache2
+    state: present
+
+ansible-playbook sampleplaybook.yaml --list-tags: It will display all available tags in specified playbook.
+ansible-playbook sampleplaybook.yml --tags "install,start" : This command will run the tags install and start.
+ansible-playbook sampleplaybook.yml --skip-tags "install": This command will skip the tags specified tags, install.
+
+
+
+ansible ignore_errors=True
+==========================
+In ansible if anyone of the task fails then it will stop the the entire execution of playbook or role. So to avoid this problem we use ignore_errors=true
+
+---
+- hosts: localhost
+  gather_facts: no
+  
+  tasks:
+  - name: deleting a file
+    command: "rm /home/devops/kumarreddy.txt"
+    ignore_errors: true
+
+  - name: list out the files
+    command: "ls -lrt"
+...
+
+Error Handling(Ansible block)
+==============================
+Ansible stops playbook execution on a task failure and we can choose to ignore_erros to continue with remaining tasks. 
+Blocks allow for logical grouping of tasks and in play error handling. Most of what you can apply to a single task (with the exception of loops) can be applied at the block level, which also makes it much easier to set data or directives common to the tasks. 
+If any module fails in ansible,the execution of the playbook terminates over there. When we know that certain module might fail, and still we want to continue playbook execution, we can use error handling. The section of code which might generate an error should be given in block section.
+If it generates an error, the control comes to rescue section. Always section is executed every time, irespective of whether the block is successfull or failure.
+
+---
+- name: Error handling
+  hosts: all
+  tasks:
+   - block:
+      - name: Install apache1
+        apt:
+         name: apache1
+         state: present
+     rescue:
+      - name: Install apache2
+        apt:
+         name: apache2
+         state: present
+     always:
+      - name: Check url response
+        uri:
+         url: "{{item}}"
+        with_items:
+         - http://172.31.11.25
+         - http://172.31.1.49
+         - http://172.31.13.15
+         - http://172.31.36.184
+...
+
+
+How to run one Task Host by Host?
+==================================
+By default forks=5(five servers at a time) in ansible.cfg file update to forks=1
+(execute one by one)
+
+ansible-playbook webserver.yml --forks=1
+
+Ex: 22 servers ( 5 servers + 5 servers +5 servers +5 servers +2 servers)
+
+
+Ansible Vault
+=============
+A typical Ansible setup will involve needing some sort of secret to fully setup a server or application.Common types of "secret" include passwords, SSH keys, SSL certificates,API tokens and anything else you don't want the public to see. Since it's common to store Ansible configurations in version control, we need a way to store secrets securely. 
+Ansible Vault is the answer to this. 
+Ansible Vault can encrypt anything inside of a YAML file, using a password of your choice.
+
+Using Ansible Vault
+===================
+A typical use of Ansible Vault is to encrypt variable files. Vault can encrypt any YAML file, but the most common files to encrypt are:
+1. Files within the group_vars directory.
+2. A role's defaults/main.yml file
+3. A role's vars/main.yml file.
+4. Any other file used to store variables.
+Let's see how to use Ansible Vault with some variable files. Let’s take below host inventory file we have defined host details along with username & password to connect to the host. If you observe password is visible to everyone. As per standards we should not expose passwords to everyone.
+
+Commands
+========
+we need to set vault password of your choice. when we are creating or encrypting files.
+ansible-vault create <fileName>.yaml  ==> it will create a file then once we save this file. it will be encrypted.
+ansible-vault encrypt <fileName>.yaml ==> existing file will be encrypted.
+ansible-vault edit <fileName>.yaml    ==> Edit the vars file
+ansible-vault view <fileName>.yaml    ==> View the vars file
+ansible-vault decrypt <fileName>.yaml ==> Decrypt the file
+ansible-vault rekey <fileName>.yaml   ==> to reset/modify the vault old password
+
+
+We have two options to here.
+============================
+- Encrypt complete host inventory file using ansible vault. But this is not suggestable as we are encrypting complete file to encrypt password.
+- Create group variables or host variables file and encrypt using ansible vault. And refer variable in host inventory from group/host variables file.
+
+Step 1: Create group variables for all groups. Add your password (Key value pair) in group variables yml
+Step 2: Encrypt existing group variables yml file using ansible vault. The typical use case is to have a normal, plaintext variable file that we want to encrypt. Using ansible-vault, we can encrypt this and define the password needed to later decrypt it: If see the content the complete file is encrypted. Content is not in human readable format.
+Step 3: Update your host inventory to refer password from group_vars/all.yml file make sure you use the same key name which you defined in group_vars/all.yml.
+Step 4: Execute ansible adhoc command ping to test the connectivity.
+
+We will get error since we are referring password from group_vars/all.yml which is encrypted using vault. So, while executing play book or adhoc commands we must pass ansible vault password what ever You have typed in while encrypting. Use below command to execute.
+
+ansible-playbook <fileName>.yaml --ask-vault-pass                       ==> Enter Vault Password
+[OR]
+ansible-playbook <fileName>.yaml --vault-password-file=<vaultpassfile>  ==> Without Entering Password use the password file
+
+
+Ansible Roles
+==============
+With more complexity in functionality, it becomes difficult to manage everything in one ansible playbook file. Sharing code among teams become difficult. Ansible Role helps solve these problems. Ansible role is an independent component which allows reuse of common configuration steps. Ansible role has to be used within playbook. Ansible role is a set of tasks to configure a host to serve a certain purpose like configuring a service. Roles are defined using YAML files with a predefined directory structure.
+
+What is Ansible roles?
+=======================
+1. Ansible roles are consists of many playbooks, which is similar to modules in puppet and cook books in chef. We term the same in ansible as roles.
+2. Roles are a way to group multiple tasks together into one container to do the automation in very effective manner with clean directory structures.
+3. Roles are set of tasks and additional files for a certain role which allow you to
+break up the configurations.
+4. It can be easily reuse the codes by anyone if the role is suitable to someone.
+5. It can be easily modify and will reduce the syntax errors.
+
+Below is a sample playbook codes to deploy Apache web server. Let’s convert this playbook codes into Ansible roles.
+
+---
+- hosts: all
+  become: true
+
+  tasks:
+  - name: Install httpd Package
+    yum: name=httpd update_cache=yes state=latest
+
+  - name: Copy httpd configuration file
+    copy: src=httpd.conf dest=/etc/httpd/conf/httpd.conf
+
+  - name: Copy index.html file
+    copy: src=index.html dest=/var/www/html
+    notify:
+    - restart apache
+
+  - name: Start and Enable httpd service
+    service: name=httpd state=restarted enabled=yes
+
+  handlers:
+  - name: restart apache
+    service: name=httpd state=restarted
+...
+
+
+How do we create Ansible Roles?
+===============================
+To create a Ansible roles, use ansible-galaxy command which has the templates to create it. This will default directories and do the modifications else we need to create each directories and files manually.
+
+Let’s take an example to create a role for Apache Web server.
+# mkdir /etc/ansible/roles
+# ansible-galaxy init /etc/ansible/roles/apache
+- apache was created successfully
+
+where, ansible-glaxy is the command to create the roles using the templates. 
+init is to initiliaze the role.
+apache is the name of role.
+
+List out the directory created under /etc/ansible/roles.
+Note : if tree command is not working install tree package using package manager.
+tree /etc/ansible/roles/apache/
+
+We have got the clean directory structure with the ansible-galaxy command. Each directory must contain a main.yml file, which contains the relevant content.
+
+
+Directory Structure:
+====================
+A role directory structure contains directories: defaults, vars, tasks, files, templates, meta, handlers. Each directory must contain a main.yml file which contains relevant content. Let’s look little closer to each directory.
+
+1.defaults: contains default variables for the role. Variables in default have the lowest priority so they are easy to override.
+
+2.vars: contains variables for the role. Variables in vars have higher priority than variables in defaults directory.
+
+3.tasks: contains the main list of steps to be executed by the role.
+
+4.files: contains files which we want to be copied to the remote host. We don’t need to specify a path of resources stored in this directory.
+
+5.templates: contains file template which supports modifications from the role.We use the Jinja2 templating language for creating templates.
+
+6.meta: contains metadata of role like an author, support platforms,dependencies.
+
+7.handlers: contains handlers which can be invoked by “notify” directives and are associated with service
+
+8.tests: This folder contains a test environment with an inventory file and a playbook script to test the role.
+
+
+First, move on to the Ansible roles directory and start editing the yml files.
+cd /etc/ansible/roles/apache2
+
+1. defaults
+Edit main.yml available in the defaults folder to define the default variables.
+base_httpd_listen_port: 80
+
+2. Tasks
+Edit main.yml available in the tasks folder to define the tasks to be executed. Contains the main list of steps to be executed by the role.
+vi tasks/main.yml
+-----------------
+- name: Install apache2 Package
+  apt: name=apache2 state=latest
+
+- name: Copy apache2 configuration file
+  template: src=apache2.conf.j2 dest=/etc/apache2/conf/apache2.conf
+
+- name: Copy index.html file
+  copy: src=index.html dest=/var/www/html
+  notify:
+  - restart apache2
+
+3. Templates
+Copy the required files (httpd.conf.j2) to the templates directory. This folder contains the template files used by the role to create the actual configuration files. These are then deployed by the role to the remote hosts. They are Jinja2 template engine scripts that enable loops and other features.
+
+4. Files
+Copy the required files (index.html) to the files directory.
+
+5. Handlers
+Edit handlers main.yml to restart the server when there is a change. Because we have already defined it in the tasks with notify option. Use the same name "restart apache2" within the main.yml file as below.
+- name: restart apache2
+  service: name=apache2 state=restarted
+
+6. Meta
+Edit meta main.yml to add the information about the roles like author, descriptions, license, platforms supported 
+
+cat meta/main.yml
+-----------------
+galaxy_info:
+author: kumar.net
+description: Apache Webserver Role
+company: kumar.net
+
+7. Tests
+This folder contains a test environment with an inventory file and a playbook script to test the role. This is primarily used when testing your role automatically using a continuous integration system, such as Jenkins or Travis CI.
+
+ansible-playbook -i tests/inventory apache2/tests/test.yml 
+
+8. Vars
+Contains variables for the role. Variables in vars have higher priority than variables in defaults directory. This is where the role variables get stored. Usually, it is used for a permanent variable that does not require any changes between environments.
+
+
+Note:
+======
+We have discussed eight folders were just discussed, not all of them are mandatory. Your role can be very useful, even if you only provide a tasks file. Most of the time, you’ll find that you’re working in the tasks folder, with supporting files found in handlers and templates.
+
+We have got all the required files for Apache roles. Let’s apply this role into the ansible playbook "site.yml" as below to deploy it on the client nodes.
+
+cat /etc/ansible/roles/installApache2Role.yaml 
+----------------------------------------------
+- hosts: localhost
+  become: true
+
+  roles:
+  - apache2
+
+We have defined this changes should be run only on appServers, you can also use "all" if need. Specify the role name as "apache2", also if you have created multiple roles, you can use the below format to add it.
+- apache2
+- common
+
+Let’s verify for syntax errors:
+===============================
+ansible-playbook /etc/ansible/rolesDemo/installApache2Role.yaml --syntax-check
+
+playbook: /etc/ansible/roles/installApache2Role.yml
+
+If No errors found. Let move on to deploy the roles.
+
+ansible-playbook /etc/ansible/rolesDemo/installApache2Role.yaml
+
+
+Different location for Ansible roles
+=====================================
+Roles can be stored at default location and from there can be easily used from splaybooks
+- ./roles has the highest precedence (current directory)
+- ~/.ansible/roles is checked after that
+- /etc/ansible/roles is checked next
+- /usr/share/ansible/roles
+
+
+Ansible Galaxy
+==============
+Ansible galaxy is a community website where we can share ansible roles and we can download ansible roles from it freely. You can find thousands of ansible roles in ansible galaxy website. https://galaxy.ansible.com/ To download ansible roles or to create a Ansible role structure, we use the ansible-galaxy command.
+
+Search ansible roles with ansible galaxy command
+---------------------------------------------------
+We can search available ansible roles with ansible galaxy search command. It will list all the available roles in galaxy website in your shell.
+ansible-galaxy search Jenkins
+
+Find more information about role
+---------------------------------
+After listing of all available roles if you want to know more information about the role like author of the role,github path, number of downloads of that role,..etc. You can use ansible-galaxy info command. ansible-galaxy info command will give you all the information about that particular role.
+ansible-galaxy info akry.jenkins
+
+Download roles from ansible galaxy website
+-------------------------------------------
+Download ansible roles from ansible galaxy website we use ansible-galaxy install command.
+ansible-galaxy install akry.jenkins
+
+Create a role with ansible galaxy command
+------------------------------------------
+Using ansible-galaxy init command we can create the role. It will create a role template or directory structure for your role.
+ansible-galaxy init mycustomrole
+
+List Downloaded roles
+----------------------
+To list installed/downloaded roles from ansible galaxy website we can use ansible-galaxy list command. it will list only installed/downloaded roles. It will not display any role user created manually or role that created with init command
+ansible-galaxy list
+
+Delete the role
+---------------
+To delete the installed/downloaded ansible role from your system we can use
+ansible-galaxy remove command.
+ansible-galaxy remove akry.jenkins
+
+
+Ansible reusable concepts
+=========================
+Import Vs Include
+-----------------
+All import* statements are pre-processed at the time playbooks are parsed.
+All include* statements are processed as they encountered during the execution of the playbook. 
+So import is static, include is dynamic.
+
+Example: Include/import tasks
+==============================
+install_pkgs_Debian.yml
+------------------------
+  - name: Install httpd on Redhat family
+    yum:
+      name: httpd
+      state: present
+    when: ansible_os_family =='RedHat'
+
+  - name: Install open java rpm on Redhat family
+    yum:
+      name: https://corretto.aws/downloads/latest/amazon-corretto-8-x64-linux-jdk.rpm
+      state: present
+    when: ansible_os_family =='RedHat'
+
+
+install_pkgs_RedHat.yml
+------------------------
+  - name: Install apache2 on Debian family
+    apt:
+      update_cache: yes
+      name: apache2
+      state: present
+      force_apt_get: yes
+    when: ansible_os_family =='Debian'
+
+  - name: Install jdk package on Debian server
+    apt:
+      update_cache: yes
+      name: openjdk-8-jdk
+    when: ansible_os_family =='Debian'
+
+MainExampleReuse
+=================
+#import If file is not there and will not start the playbook 
+---
+- name: Ansible import/include module examples
+  hosts: localhost
+  become: yes
+
+  tasks:
+  - import_tasks: install_pkgs_RedHat.yml
+    when: ansible_os_family =='RedHat'
+
+  - import_tasks: install_pkgs_Debian.yml
+    when: ansible_os_family =='Debian'
+...
+
+#include If file is not there but it will start the playbook
+---
+- name: Ansible import/include module examples
+  hosts: localhost
+  become: yes
+
+  tasks:
+  - include_tasks: install_pkgs_{{ ansible_os_family }}.yml
+    when: ansible_os_family =='RedHat'
+
+  - include_tasks: install_pkgs_{{ ansible_os_family }}.yml
+    when: ansible_os_family =='Debian'
+...
+
+import_vars and include_vars:
+=============================
+---
+- name: Ansible import/include module examples
+  hosts: localhost
+  gather_facts: true
+  become: yes
+  
+  tasks:
+  - include_vars: required_vars_{{ ansible_os_family}}.yml
+  - debug:
+      msg: "Pkg name= {{ pkg }}"
+
+required_vars_RedHat.yml
+------------------------
+pkg: httpd
+
+required_vars_Debian.yml
+-------------------------
+pkg: apache2
+
+
+Ansible Serial/Rolling Deployment
+==================================
+By using serial/rolling deployment we can achieve zero down time deployment.
+
+---
+- hosts: localhost
+  become: yes
+  serial: 4
+
+  tasks:
+  - name: Disable the server {{ inventory_hostname }}
+    debug:
+      msg: "Disable the server {{ inventory_hostname }}"
+
+  - name: Update the server {{ inventory_hostname }}
+    debug:
+      msg: "Update the server {{ inventory_hostname }}"
+
+  - name: Enable the server {{ inventory_hostname }}
+    debug:
+      msg: "Enable the server {{ inventory_hostname }}"
+...
