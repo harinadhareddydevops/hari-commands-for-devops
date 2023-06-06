@@ -15,12 +15,7 @@ AWS-commands
 no keysthen generate-- command>>ssh-keygen
 cd .ssh/
 
-ls
--rw-r--r-- 1 DELL 197609   105 Apr 30 07:29 config
--rw-r--r-- 1 DELL 197609  2590 Apr 25 10:39 id_rsa
--rw-r--r-- 1 DELL 197609   563 Apr 25 10:39 id_rsa.pub
--rw-r--r-- 1 DELL 197609 45656 May 31 15:27 known_hosts
--rw-r--r-- 1 DELL 197609 45446 May 31 15:27 known_hosts.old
+
 
 cat id_rsa.pub >>copy and paste
 
