@@ -4,9 +4,7 @@ AWS-commands
 
 1. Here in home directory we add access key and seret key for aws athuntiation and autharisation with cli
 
- cd .aws/
-   -rw-r--r-- 1 DELL 197609  46 May 17 11:03 config
-   -rw-r--r-- 1 DELL 197609 119 May 17 11:03 credentials
+
 
 
 
