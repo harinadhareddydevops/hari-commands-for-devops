@@ -8,15 +8,9 @@ AWS-commands
    -rw-r--r-- 1 DELL 197609  46 May 17 11:03 config
    -rw-r--r-- 1 DELL 197609 119 May 17 11:03 credentials
 
- cat config
-[default]
-region = us-east-2
-output = json
 
-cat credentials
-[default]
-aws_access_key_id = AKIA2W3J5UR62SCRGYAN
-aws_secret_access_key = 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
+
+
 
 2.Here in home directory we generate keygen and copy id_rsa.pub , paste where we want to acess
 
