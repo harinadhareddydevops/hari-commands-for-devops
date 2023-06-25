@@ -1,0 +1,317 @@
+COMMANDS
+
+
+AWS
+
+1. Here in home directory we add access key and seret key for aws athuntiation and autharisation with cli
+
+ cd .aws/
+   -rw-r--r-- 1 DELL 197609  46 May 17 11-------------------------03 config
+   -rw-r--r-- 1 DELL 197609 119 May 17 11-------------------------03 credentials
+
+ cat config
+[default]
+region = us-east-2
+output = json
+
+cat credentials
+[default]
+aws_access_key_id = AKIA2W3J5UR62SCRGYAN
+aws_secret_access_key = 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
+
+2.Here in home directory we generate keygen and copy id_rsa.pub , paste where we want to acess
+
+no keysthen generate-- command>>ssh-keygen
+cd .ssh/
+
+ls
+-rw-r--r-- 1 DELL 197609   105 Apr 30 07-------------------------29 config
+-rw-r--r-- 1 DELL 197609  2590 Apr 25 10-------------------------39 id_rsa
+-rw-r--r-- 1 DELL 197609   563 Apr 25 10-------------------------39 id_rsa.pub
+-rw-r--r-- 1 DELL 197609 45656 May 31 15-------------------------27 known_hosts
+-rw-r--r-- 1 DELL 197609 45446 May 31 15-------------------------27 known_hosts.old
+
+cat id_rsa.pub >>copy and paste
+
+3. CD ---------change the directory
+4. touch ------ to reate file
+5. mkdir ------to create directory
+6.vi ---------- to edit the file data
+7. q!-----------to save the data in vi file
+8.wq!------------to save the madoified data in vi file
+9. esc and -------------------------set nu------numebring in vi file
+10.esc and dd -------to delete the lines in vi file
+11.nslookup ------- to nameserver lookup
+12.telnet ip or dns name port----wether port open to the outside or not
+13.netstat -anlp | grep "80"    , nc , nmap -----whether port is listing or not
+14. sudo su - ------swith to root user
+15.protocal-------------------------//name-------------------------port/ContextRoot 
+16.curl http-------------------------//169.254.169.254/region ----for metadata
+17.ssh -i pem file username@ip/dns----to login ec2 server
+18.yum --------------------------- to install application on shell on linux server
+19.apt-get-------------------------to install application on shell on ubuntu
+20.yum install httpd------to install
+21.systemctl start httpd-----to start
+22.systemctl enable httpd---when you reboot/restart automatically pkg will start. 
+23.chkconfig on ---when you reboot/restart automatically pkg will start. 
+24.wget url-----dowload the package from internet
+25.unzip -----for zip files
+26.tar .xvzf ----for tar files
+27.cp -r * (path)----for copy all files from current folder to given path
+28.yum list | grep (word)------searching purpose
+29.ps -ef | grep httpd---whether process running or not 
+30.ping ---
+31. aws s3 ls----to see list of s3 buckets
+32. aws s3 cp app.zip(file) s3-------------------------//application-rct-cloud(bucket name)/app.zip(same file)-----copy local to s3 
+33.aws s3 cp s3-------------------------//application-rct-cloud/app.zip . -----copy from s3 to local
+34.scp -i privateKey fileNametoCopy user@publicIP-------------------------/path ----copy file from local to ec2 server
+35. .scp -i pem pem ec2-user@publicIP-------------------------/home/ec2-user/
+36.aws sts get-caller-identity ------get all aws account details
+37.whoami----username
+38.hostname---servername
+39.pwd---present working directory
+40.Nginxpath----- /usr/share/nginx/html/
+41.apahepath-----/var/www/html
+
+
+
+
+
+port number and versions and codes
+
+
+Apache----80
+jenkins----8080
+nexus------8081
+nginx------80
+tomcat-----8080
+grfana-----3000
+promethius---9090
+node_exporter---9100
+Elasticsearch----9200 
+Kibana----5601 · 
+Logstash---5044
+rds--------3306
+ssh-------22
+
+
+http status code = 100-199 - informational 
+http status codes = 200-299 - success 
+http status code = 400-499 - issue at client and server side permission issue 
+http status code = 500-599-internal Server Error (server issue)
+
+
+aws-----------------2
+doker--------------23.xxx
+jenkins-----------2.357 
+maven-----------3.0.5
+kubernetes------1.23
+java--------17.xxx
+
+
+
+
+
+
+
+Docker commands
+
+docker run----------------Create and start a new container from an image.
+     docker run <image_name>
+
+docker ps--------------------List all running containers.
+      docker ps
+
+docker stop--------------------Stop a running container.
+      docker stop <container_id>
+
+docker start----------------Start a stopped container.
+      docker start <container_id>
+
+docker restart----------------Restart a running container.
+docker restart <container_id>
+
+docker rm----------------Remove a container.
+docker rm <container_id>
+
+docker images----------------List all available images on the system.
+docker images
+
+docker rmi----------------Remove an image.
+docker rmi <image_id>
+
+docker pull----------------Download an image from a registry.
+docker pull <image_name>
+
+docker push----------------Upload an image to a registry.
+docker push <image_name>
+
+docker exec----------------Run a command in a running container.
+docker exec <container_id> <command>
+
+docker build----------------Build a new image from a Dockerfile.
+docker build -t <image_name> <path_to_dockerfile>
+
+docker network----------------Manage Docker networks.
+docker network create <network_name>
+
+docker volume----------------Manage Docker volumes.
+docker volume create <volume_name>
+
+
+docker-compose----------------Manage multi-container Docker applications with a YAML file.
+docker-compose up
+
+docker logs----------------View the logs of a container.
+docker logs <container_id>
+
+docker inspect----------------Display detailed information about a container or image.
+docker inspect <container_id>
+
+docker attach----------------Attach to a running container.
+docker attach <container_id>
+
+docker cp----------------Copy files/folders between a container and the local filesystem.
+docker cp <container_id>-------------------------<path_inside_container> <path_on_host>
+
+docker save----------------Save an image to a tar archive.
+docker save -o <output_file.tar> <image_name>
+
+ 
+
+
+
+
+
+
+
+
+
+
+K8S COMMANDS
+kubectl
+
+kubectl get------------------------- Retrieve information about Kubernetes resources.
+ kubectl get pods
+
+kubectl describe------------------------- Provide detailed information about a specific resource.
+ kubectl describe pod <pod_name>
+
+kubectl create------------------------- Create a new resource from a file, URL, or command.
+ kubectl create -f <filename.yaml>
+
+kubectl apply------------------------- Apply changes to a resource configuration.
+ kubectl apply -f <filename.yaml>
+
+kubectl delete------------------------- Delete a resource.
+ kubectl delete pod <pod_name>
+
+kubectl edit------------------------- Edit a resource using the default editor.
+ kubectl edit pod <pod_name>
+
+kubectl logs------------------------- Print the logs of a pod.
+ kubectl logs <pod_name>
+
+kubectl exec------------------------- Run a command in a container within a pod.
+ kubectl exec <pod_name> -- <command>
+
+kubectl port-forward------------------------- Forward one or more local ports to a pod.
+ kubectl port-forward <pod_name> <local_port> <pod_port>
+
+kubectl scale------------------------- Scale the number of replicas in a deployment, replicaset, or statefulset.
+ kubectl scale deployment <deployment_name> --replicas=<replica_count>
+
+kubectl expose------------------------- Expose a deployment, replicaset, or service as a new Kubernetes service.
+ kubectl expose deployment <deployment_name> --port=<port> --target-port=<target_port>
+
+kubectl rollout------------------------- Manage rollouts and updates of resources.
+ kubectl rollout status deployment/<deployment_name>
+
+kubectl apply -f------------------------- Apply configuration to a resource from a file or directory.
+ kubectl apply -f <filename.yaml>
+
+kubectl get pods --namespace------------------------- List pods in a specific namespace.
+ kubectl get pods --namespace=<namespace>
+
+kubectl describe nodes------------------------- Get detailed information about nodes in the cluster.
+ kubectl describe nodes
+
+kubectl get services------------------------- List services in the cluster.
+ kubectl get services
+
+kubectl get deployments------------------------- List deployments in the cluster.
+ kubectl get deployments
+
+kubectl get ingress------------------------- List ingresses in the cluster.
+ kubectl get ingress
+
+kubectl create secret------------------------- Create a secret from literal values, files, or environment variables.
+ kubectl create secret generic <secret_name> --from-literal=<key>=<value>
+
+
+kubectl apply -f -------------------------- Apply configuration from standard input (stdin).
+ cat <filename.yaml> | kubectl apply -f –
+
+
+HELM
+
+
+
+	
+Certainly! Here is a list of commonly used Helm commands for managing Kubernetes applications------------------
+
+helm install------------------ Install a chart into a Kubernetes cluster.
+ helm install <release_name> <chart_name>
+
+helm upgrade------------------ Upgrade a release to a new version of a chart.
+ helm upgrade <release_name> <chart_name>
+
+helm rollback------------------ Roll back a release to a previous version.
+ helm rollback <release_name> <revision>
+
+helm uninstall------------------ Uninstall a release from a Kubernetes cluster.
+ helm uninstall <release_name>
+
+helm ls------------------ List releases in a Kubernetes cluster.
+ helm ls
+
+
+helm search------------------ Search for charts in the Helm chart repositories.
+ helm search <chart_name>
+
+helm repo add------------------ Add a Helm chart repository.
+ helm repo add <repository_name> <repository_url>
+
+helm repo update------------------ Update the local cache of Helm chart repositories.
+ helm repo update
+
+helm dependency update------------------ Update the dependencies of a chart.
+ helm dependency update <chart_directory>
+
+helm template------------------ Render a chart locally without installing it.
+ helm template <chart_directory>
+
+helm lint------------------ Check a chart for possible issues.
+ helm lint <chart_directory>
+
+helm package------------------ Package a chart directory into a versioned chart archive.
+ helm package <chart_directory>
+
+helm install --name------------------ Install a chart with a specified release name.
+ helm install --name <release_name> <chart_name>
+
+helm get------------------ Get information about a specific release.
+ helm get <command> <release_name>
+
+helm history------------------ View the release history of a chart.
+ helm history <release_name>
+
+helm repo list------------------ List the configured Helm chart repositories.
+ helm repo list
+
+helm repo remove------------------ Remove a Helm chart repository.
+ helm repo remove <repository_name>
+
+helm create------------------ Create a new chart template.
+ helm create <chart_name>
+

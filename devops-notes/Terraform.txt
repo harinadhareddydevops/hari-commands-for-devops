@@ -1,0 +1,657 @@
+---
+Infrastructure Management:
+=========================
+
+terraform init
+==============
+The terraform init command read the configuration file that we used and found the provider to be aws and downloaded the terraform plugins needed for this. These can be found in the path .terraform\providers\registry.terraform.io\hashicorp.
+Each time you configure our provider, ensure to run terraform init.
+
+terraform plan
+==============
+Perform this command in this directory to see what the configuration file (the manifest) will do and review it.
+
+terraform fmt
+==============
+The terraform fmt command is used to rewrite Terraform configuration files to take care of the overall formatting so that it is readable.
+
+terraform validate
+==================
+Terraform Validate checks whether a configuration is syntactically valid. It can check things like unsupported arguments, undeclared variables and others.
+
+terraform apply
+===============
+Perform this to execute the manifest that you have. Enter yes to execute it after it shows a review of what will happen
+You can confirm this in the console.
+
+apply vars file ---> terraform apply --var-file=terraform.tfvars
+
+Apply and destroy particular resource/module
+============================================
+-target its a flg to apply/destroy particular resource/module
+terraform plan -target=aws_instance.myec2
+terraform apply -target=aws_instance.myec2
+terraform destroy -target=aws_instance.myec2
+
+terraform output
+================
+The terraform output command is used to extract the value of an output variable from the state file.
+
+terraform refresh
+==================
+The terraform refresh command is used to reconcile the state Terraform knows about (via its state file) with the real-world infrastructure. This does not modify infrastructure but does modify the state file.
+
+terraform destroy
+================
+destroy the infrastructure what statefile have.
+
+terraform taint
+===============
+Mark a resource instance as not fully functional. If a resource after it has been created had changes done to it and you wanted to fix it, you can either import the changes to Terraform or deleted it and recreate that resource. The second is what ‘terraform taint’ does. You can mark the resource as taint and then when you next do terraform apply, it will delete and re-create the resource.
+The command will not modify the infrastructure, rather it modifies the state file so that it can be marked as tainted.s
+When a resource is marked as tainted, the next plan will show that the resource will be destroyed and re-created and thus the next apply will implement this. Note that tainting a resource for re-creation may affect resources that depend on the newly tainted
+resource.
+
+Example:
+========
+terraform taint aws_instance.web
+
+terraform untaint
+=================
+Remove the 'tainted' state from a resource instance
+
+terraform graph
+===============
+Gives a visual representation of either a configuration or execution plan. The output of the terraform graph command is a file in DOT format which can be easily converted into an image
+
+
+Blocks
+======
+provider block
+==============
+give provider info like aws, azure, gcp and creds to connect to provider.
+
+Example:
+========
+provider "aws" {
+	access_key = "xxxxxxxxxx"
+	secret_key = "xxxxxxxxxx"
+	region = "us-east-1"
+}
+
+version number args
+====================
+>=1.0         == Greater than equal to the version
+<=1.0         == Less than equal to the version
+~>2.0         == Any version in the 2.X range
+>=2.10,<=2.30 == Any version between 2.10 and 2.30
+
+
+resource block
+============== 
+Its main resource block can declare arguments inside resource block based on terraform offcial docs.
+
+Example
+=======
+resource "aws_instance" "example" {
+	ami = "ami-jdskjad"
+	instance_type = "t2.micro"
+}
+
+Note: 
+resource is the component
+aws_instance is the provider and type of resource
+example is the resource reference name
+ami and instance_type these are arguments
+
+
+data block 
+==========
+Data sources allow data to be fetched or computed for existing infrastructure.
+
+Example:
+========
+data "aws_ami" "example" {
+	most_recent = true
+
+	owners = ["self"]
+	tags = {
+		Name = "app-server"
+		Tested = "true"
+	}
+}
+
+managed/data resources
+======================
+managed resources creates, updates, destroys infrastructure.
+data sources only reads infrastructure.
+
+
+variable block
+==============
+declare variables and types like number, string, list, bool, tuple, ma...etc
+we can give different data types like this list(string), list(map(string)), tuple([string, number, bool]), list(any), list(number)...etc
+
+Example:
+========
+variable "image_id" {
+	description = "Image ID"
+	type = string
+	default = "ami-XXXXXXXXx"
+}
+
+
+Variable Definition Precedence
+===============================
+Environment variables like TF_VAR_followed by the name of declared variable.it should be export TF_VAR_image_id=ami-XXXXXXX
+The terraform.tfvars file, if present.
+The terraform.tfvars.json file, if present.
+Any *.auto.tfvars or *.auto.tfvars.json files,
+Any -var and -var-file options on the command line, in the order they are provided.
+If the same variable is assigned multiple values, Terraform uses the last value it finds.
+
+
+output block
+=============
+The terraform output command is used to extract the value of an output variable from the state file.
+
+Example:
+========
+output "private_ip" {
+	value = aws_instance.web.private_ip
+	description = "private ip"
+	sensitive = false
+}
+
+
+Terraform State commands
+========================
+Terraform stores the state of the infrastructure that is being created from the TF files allowing terraform to map real world resource to your existing configuration. These are stored in a state file. json format (do not touch!)
+terraform state list : List resources within terraform state.
+terraform state mv : Move items within terraform state. This will be used to resource renaming without destroy, apply command
+terraform state pull : Manually download and output the state from the state file.
+terraform state push : Manually upload a local state file to the remote state
+terraform state rm : Remove items from the state. Items removed from the state are not physically destroyed. This item no longer managed
+by Terraform.
+terraform state show Show attributes of a single resource in the state.
+
+Remote state file
+=================
+Remote state is stored in a backend 
+Backedn must be initialized using init 
+partial configs recommended
+Backend do not support interpolation means variables didnt accepted.
+
+
+workspaces
+==========
+workspaces replace the env command
+separate state file per workspace
+use a single conf for multiple deployments
+supported by select backends
+Examples
+========
+terraform workspace new development
+terraform workspace select development
+
+Note:
+====
+show   == show current workspace
+list   == list all workspaces
+select == select which workspace to use 
+new    == create a new workspace
+delete == remove a new workspace
+
+
+Implicit dependency
+===================
+it should be like resource name.resource reference name in between two resources. when one resource id needed for another resource.
+
+Explicitly dependency
+=====================
+Explicitly specifying a dependency is only necessary when a resource relies on some other resource’s behavior but doesn’t access any of that resource’s data in its arguments. “Depends_on”
+Example:
+========
+resource "aws_instance" "example" {
+	ami	= "ami-a1b2c3d4"
+	instance_type = "t2.micro"
+	depends_on = [aws_iam_role_policy.example]
+}
+
+
+Local Values
+============
+Local values are helpful to avoid repeating the same values or expressions multiple times in a configuration.
+locals {
+	common_tags = {
+	  owner = "kumar"
+	  service = "backend"
+	}
+}
+resource "aws_instance" "prod" {
+	ami = "ami-sjkhdhgsaj"
+	instance_type = "t2.micro"
+	tags = local.common_tags
+}
+
+
+provisioners
+============
+Provisioners can be used to model specific actions on the local machine or on a remote machine in order to prepare servers or other infrastructure objects for service. Provisioners are inside the resource block.
+Note: Provisioners should only be used as a last resort. For most common situations there are better alternatives.
+
+types of provisioners
+=====================
+file provisioner
+=================
+The file provisioner is used to copy files or directories from the machine executing Terraform to the newly created resource.
+
+Example:
+========
+resource "aws_instance" "web" {
+	#...
+
+	provisioner "file" {
+	  source = "conf/myapp.conf"
+	  destination = "/etc/myapp.conf"
+	}
+
+	connection {
+		type = "ssh"
+		host = self.public_ip
+		user = "ec2-user"
+		private_key = file("./terraform.pem")
+	}
+}
+
+local exec
+==========
+The local-exec provisioner requires no other configuration, but most other provisioners must connect to the remote system using SSH or WinRM.
+
+Note: One of the most used approach of local exec is to run ansible-playbooks on the created server after the resource is created.
+
+Example:
+=========
+resource "aws_instance" "web" {
+	#...
+
+	provisioner "local-exec" {
+	  command = "echo ${aws_instance.web.private_ip} >> private_ips.txt"
+	}
+}
+
+remote exec 
+===========
+The remote-exec provisioner invokes a script on a remote resource after it is created. This can be used to run a configuration management tool, bootstrap into a cluster, etc. Allowd values are inline, script..etc
+Example:
+=======
+resource "aws_instance" "web" {
+	#...
+
+	provisioner "remote-exec" {
+		inline = [
+		  "sudo amazon-linux-extras install -y nginx"
+		  "sudo systemctl start nginx"
+		]
+	
+		connection {
+		  type = "ssh"
+		  host = self.public_ip
+		  user = "ec2-user"
+		  private_key = file("./terraform.pem")
+		}
+	}
+}
+
+Null resource block/provisioner
+===============================
+If you need to run provisioners that aren't directly associated with a specific resource, you can associate them with a null_resource.
+Instances of null_resource are treated like normal resources, but they don't do anything. Like with any other resource, you can configure provisioners and connection details on a null_resource. You can also use its triggers argument and any meta-arguments to control exactly where in the dependency graph its provisioners will run.
+
+Example:
+========
+resource "null_resource" "web" {
+	#...
+
+	provisioner "file" {
+	  source = "conf/myapp.conf"
+	  destination = "/etc/myapp.conf"
+	}
+
+	connection {
+		type = "ssh"
+		host = self.public_ip
+		user = "ec2-user"
+		private_key = file("./terraform.pem")
+	}
+}
+
+
+Modules
+=======
+A module is a simple directory that contains other .tf files. Using modules we can make the code reusable. Modules are local or remote.
+Calling Child Modules
+=====================
+Input variables to accept values from the calling module.
+Output values to return results to the calling module, which it can then use to populate arguments elsewhere.
+Resources to define one or more infrastructure objects that the module will manage.
+
+Plan tf Example:
+================
+variable "image_id" {
+	type = string
+}
+resource "aws_instance" "myec2" {
+	ami = var.image_id
+	instance_type = "t2.micro"
+}
+output "instance_ip_addr" {
+	value = aws_instance.myec2.private_ip
+}
+
+Call to the module example:
+===========================
+module "ec2server" {
+	source = "./ec2"
+	image_id = "ami-0528a5175983e7f28"
+}
+
+
+Meta arguments
+==============
+
+Count and Count Index
+=====================
+The count parameter on resources can simplify configurations and let you scale resources by simply incrementing a number.
+In resource blocks where the count is set, an additional count object (count.index) is available in expressions, so that you can modify the configuration of each instance.
+
+Example:
+=======
+resource "aws_instance" "myec2" {
+	ami = var.image_id
+	instance_type = "t2.micro"
+	count = 3
+
+	tags = {
+	   Name = "my-ec2.${count.index}"
+	}
+}
+output "instance_ip_addr" {
+	value = aws_instance.myec2[*].private_ip
+}
+
+for_each
+========
+The for_each meta-argument accepts a map or a set of strings, and creates an instance for each item in that map or set. Each instance has a distinct infrastructure object associated with it, and each is separately created, updated, or destroyed when the configuration is applied.
+
+The each Object
+===============
+In blocks where for_each is set, an additional each object is available in expressions, so you can modify the configuration of each instance. This object has two attributes:
+each.key — The map key (or set member) corresponding to this instance.
+each.value — The map value corresponding to this instance. (If a set was provided, this is the same as each.key.)
+
+Examples:
+=========
+resource "azurerm_resource_group" "rg" {
+  for_each = {
+    a_group = "eastus"
+    another_group = "westus2"
+  }
+  name     = each.key
+  location = each.value
+}
+
+resource "aws_iam_user" "the-accounts" {
+  for_each = toset( ["Todd", "James", "Alice", "Dottie"] )
+  name     = each.key
+}
+
+Another Example:
+================
+variable "vpcs" {
+  type = map(object({
+    cidr_block = string
+  }))
+}
+
+resource "aws_vpc" "example" {
+  # One VPC for each element of var.vpcs
+  for_each = var.vpcs
+
+  # each.value here is a value from var.vpcs
+  cidr_block = each.value.cidr_block
+}
+
+resource "aws_internet_gateway" "example" {
+  # One Internet Gateway per VPC
+  for_each = aws_vpc.example
+
+  # each.value here is a full aws_vpc object
+  vpc_id = each.value.id
+}
+
+output "vpc_ids" {
+  value = {
+    for k, v in aws_vpc.example : k => v.id
+  }
+
+  # The VPCs aren't fully functional until their
+  # internet gateways are running.
+  depends_on = [aws_internet_gateway.example]
+}
+
+
+Functions:
+==========
+
+file 
+====
+file reads the content of a file at the given path and returns them as string.
+
+syntax:
+======
+file(path)
+
+Example:
+========
+resource "aws_key_pair" {
+	key_name = "login-key"
+	public_key = file("${path.module}/id_rsa.pub")
+}
+
+lookup
+======
+retieves the value of single element from a map. given its key. if the given key doesnt exist. the given default value is returned instead.
+
+Syntax:
+=======
+lookup(map, key, default)
+
+Example:
+========
+variable "ami" {
+	type = map
+	default = {
+	  eu-west-1 = "ami-XXXXXXXXX"
+	  eu-west-2 = "ami-XXXXXXXXX"
+	  ap-south-1 = "ami-XXXXXXXX"  
+	}
+
+}
+variable "region" {
+	default = ap-south-1
+}
+
+element
+========
+element retrieves single element from a list.
+
+syntax:
+========
+element(list, index)
+
+Example:
+========
+variable "tags" {
+	type = list
+	default = ["firstec2", "secondec2"]
+}
+resource "aws_instance" "prod" {
+	ami = lookup(var.ami, var.region)
+	instance_type = "t2.micro"
+	count = 2
+
+	tags = {
+	  Name = element(var.tags, count.index)
+	}
+}
+
+formatdate & timestamp
+======================
+returns a UTC timestamp string.
+formatdate converts a timestamp into a different time format.
+
+Syntax:
+========
+formatdate(spec, timestamp)
+
+Example:
+=======
+locals {
+	time = formatdate ("DD MM YYYY hh:mm ZZZ", timestamp())
+}
+
+output "timestamp" {
+	value = local.time
+}
+
+
+Dynamic Blocks
+==============
+Under many scenarios there are repeated blocks within a block, these are known as nested blocks.
+The issue with them is the result of long code being created which makes management of the code difficult, for instance needing multiple ingress blocks within the security group resource like so:
+
+ingress {
+	from_port = 8080
+	to_port = 8080
+	protocol = "tcp"
+	cidr_blocks = ["0.0.0.0/0"]
+}
+ingress {
+	from_port = 5000
+	to_port = 5000
+	protocol = "tcp"
+	cidr_blocks = ["0.0.0.0/0"]
+}
+
+Now, imagine you needed to add 40 ports to a security group resource, then you would need to create 40 ingress blocks.
+Dynamic Block allows you to construct repeatable nested blocks which is supported inside resource, data, provider, and provisioner blocks. Take this example here where a dynamic block is created for this ingress block. We also need to create a variable with all the code that defines the var.sg_ports, so you can have the ports you wish to add there instead of being separate ingress blocks.
+
+dynamic "ingress" {
+	for_each = var.sg_ports
+	content {
+	  from_port = ingress.value
+	  to_port = ingress.value
+	  protocol = "tcp"
+	  cidr_blocks = ["0.0.0.0/0"]
+	}
+}
+
+variable "sg_ports" {
+	type = list(number)
+	description = "list of ingress ports"
+	default = [8000, 8080, 5000, 3306, 32107]
+}
+
+Example Usage:
+=============
+resource "aws_security_group" "demo-sg" {
+	name = "dynamic-sg"
+	description = "Ingress for vault"
+
+	dynamic "ingress" {
+		for_each = var.sg_ports
+			content {
+	  			from_port = ingress.value
+	  			to_port = ingress.value
+	  			protocol = "tcp"
+	  			cidr_blocks = ["0.0.0.0/0"]
+	  		}
+		}
+	}	
+}
+
+Breakdown
+=========
+for_each = var.sg_ports : This means that for each value in that variable list (named sg_ports), the dynamic block that you have defined will be created. As in this section of the block:
+from_port = ingress.value
+to_port = ingress.value
+protocol = "tcp"
+cidr_blocks = ["0.0.0.0/0"]
+ingress.value : This is where the list is referenced from the variables. So this will take the value of 8000, then 8080 for the next block etc.
+If you wanted to rename ingress.value you can re-write the code using the iterator argument like so:
+
+Example Usage:
+=============
+resource "aws_security_group" "demo-sg" {
+	name = "dynamic-sg"
+	description = "Ingress for vault"
+
+	dynamic "ingress" {
+		for_each = var.sg_ports
+		iterator = port
+			content {
+	  			from_port = port.value
+	  			to_port = port.value
+	  			protocol = "tcp"
+	  			cidr_blocks = ["0.0.0.0/0"]
+	  		}
+		}
+	}	
+}
+
+You can also do all of this for the outbound rules by replacing ingress to egress.
+
+
+Splat Expression
+================
+Definition: Allows you to get the list of all the attributes
+
+Example:
+========
+resource "aws_iam_user" "users" {
+	name = "iamuser.${count.index}"
+	count = 3
+	path = "/system/"
+}
+
+output "arns" {
+	value = aws_iam_user.users[*].arn
+}
+
+Here, we create 3 iam users, as well as use the count.index to name them from 0 to 2. If you look in value, there is [*].arn in the output. This star means you will get all the users, but if you specified [0] for example, then you’d get only the first users output.
+
+
+conditional expressions
+=======================
+A conditional expression uses the value of a bool expression to select one of two values
+
+condition ? true_val : false_val
+
+if the cond is true, then the result is true_val and vice versa.
+
+Example:
+========
+variable "isTest" {
+	default = true
+}
+resource "aws_instance" "dev" {
+	ami = "ami-sjkhdhgsaj"
+	instance_type = "t2.micro"
+	count = var.isTest == true ? 1 : 0
+}
+resource "aws_instance" "prod" {
+	ami = "ami-sjkhdhgsaj"
+	instance_type = "t2.micro"
+	count = var.isTest == false ? 1 : 0
+}

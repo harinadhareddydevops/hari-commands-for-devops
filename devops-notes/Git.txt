@@ -1,0 +1,332 @@
+---
+Version Control Management
+==========================
+
+Two ways to authenticate from git(client) to github(server) 
+-----------------------------------------------------------
+ssh   == (ssh-keygen in your pc then copy and paste public key in github, private key in your pc)
+https == (Username/Password(appPassword))
+
+Git Lifecycle
+=============
+1. working area
+2. staging/indexing/buffer area
+3. local area(.git)
+4. remote/central area
+
+working dir (workplace)               == git init
+
+staging/buffer/index area             == git add .
+
+local repo (.git)                     == git commit -m "message"
+
+remote repo (github account)          == git push origin <branchName>
+
+
+1. git clone (remote repo to our local repo)
+2. git pull (developer latest changes to our local repo) == git fetch + git merge
+3. git fetch (whenever you will use git fetch, must use git merge otherwise you will get errors)
+4. git merge ( fetch localrepo(.git) changes to our working repo)
+
+
+git client config = This information is used by git to record our commits
+=================
+git config --list                       == show the current configuration
+git config --global user.name           == add username of yours
+git config --global user.email          == add email of yours
+git config --global push.default        == add your push strategy like simple
+git config --global --edit              == edit your name and email...etc
+git config --global init.defaultBranch  == master
+
+Note: --global tells git to use the same information for all the repositories i manage on my local machine.
+
+git remote
+==========
+git remote -v                     == verify the remote connection
+git remote add origin <repo-url>  == URL for the remote repository where your local repository code will be pushed.
+git remote remove origin          == It will remove the remote origins.
+git remote show origin            == It will give the information on a particular remote (here origin is the remote name)
+
+git clean
+=========
+git clean -n      == Display the list of expected files to remove
+git clean -f      == Delete the files in working area
+
+
+git rm 
+=======
+git rm <filename>        == it will remove files
+git rm -r <foldername>   == it will remove folders
+
+git status
+==========
+git status         == This provides information about our local repository (working area, stating area & local
+repository)
+
+git init
+========
+git init              == Initilize the git repo locally (.git)
+
+git add 
+========
+git add <filename>           == add your files to staging area
+git add . or -A              == add all of your files and dirs to staging area
+
+Note: there are 4 areas
+1. working area
+2. staging/indexing/buffer area
+3. local area(.git)
+4. remote/central area
+
+git commit
+===========
+git commit -m "message"     == When we do commit, it picks the files present in staging and commits to local repository. Its created. commit-id contains username, mail, date and time other details.
+
+git show -- Checking specific commit-id
+========
+git show <commit-id or tag name>  == it will show complete info about commit id what you did new things
+
+git log 
+=======
+git log                 == we can view the log info.It contains the information like Author,Date and Comment information. 
+git log --oneline       == Display commits in one line
+git log --oneline --all == Display all commits in one line
+git log --oneline -2    == Display latest two commits in one line
+git log -2              == Display latest two commits
+
+Note:
+(HEAD -> master, origin/master, dev)  master && dev branches having same commit-id,
+origin/master(remote repo) also having commit-id.
+
+git diff -- It compares the different versions of data sources
+========
+git diff <commit-id-1> <commit-id-2>   == compare between two commits ids about added and removed data
+git diff <branchName1> <branchName2>   == compare between two branches about added and removed data
+
+git push -- origin is the remote name and master is the branch name.
+========
+git push origin <branchName>  == Push the changes in your local repository to GitHub remote repository.
+git push -u --all             == it will push all staged and branches files to remote repo
+
+
+git reset  == Local
+=========
+Whenever we are modify and added the file into staging area the temporary-id will create that time head reference will pointing to the temporary-id.
+git reset --hard <commit-id>  == Move the head pointer also reset the staging and working area (take the previous commit id whenever you want to remove latest commit).
+git reset --mixed <commit-id> == Move the head pointer and reset the staging area then you have to add and commit
+git reset --soft <commit-id>  == Move the head pointer from temporary-id to commit-id then you have to commit
+
+Note: Don't use reset if your commit is pushed to the remote, it causes problems.
+Note: Whenever we are using reset hard make sure that we can copy and store hash value again we need to back easily.
+
+git revert   == Remote
+===========
+If we want to remove specific commit changes we can use git revert. It doesn't remove the commit id from the
+history; instead it reverts changes to the files and makes a new commit id. This commit-id’s will
+updated in the remote repository and other users also can visible this messages.
+git revert              == Reverting the Specific commit-id from remote repo
+
+Note: If commits are already pushed to remote we can't use reset instead we should go with revert.
+
+git cherry-pick
+===============
+It’s used for restoring the commit-id and also It picks a commit from different branch and applies it
+to current branch.
+git cherry-pick <commit-id>     == Restore the changes and picks a commit id.
+
+
+git checkout
+============
+If we want to traverse one commit-id to other commit-id and one branch to another branch we can go for git checkout.
+git checkout <commit-id or branchName>
+
+git fetch 
+=========
+Fetch command will download all files from remote repo to local repo(.git) and Fetch doesn’t change local working copies or local files (working dir).
+git fetch origin master             == To synchronize the local repository
+git fetch --all                     == To fetch all the branches simultaneously.
+git fetch <branchurl><branchName>   == To fetch a specific branch
+
+Note:
+If we use git fetch and compulsory will run git merge command.
+
+git merge
+=========
+git merge         == Merge command will merge the files , so finally you will get the
+files from remote repo to local repo.
+
+git pull
+========
+git pull          == used to fetch the files from remote repository to local repo. If you want to
+
+Note: git pull = git fetch + git merge
+When you are executing pull command it will execute two commands in background. git fetch + git merge
+
+git clone
+=========
+git clone <repo-url>        == clones the remote copy into our local machine.
+git clone -b <branchName>   == Clones from particular branch
+
+
+
+
+git merge
+=========
+git merge apply all commits from one branch and merges them into another branch in one commit with final result.
+git merge doesn't rewrite commit history, just adds one new commit id
+changes are reverted once merge completed by using git revert command
+git merge <branchName>    == integrate changes from one branch into another branch
+
+Note: Use merge if we have any issue we can reset easily.
+
+git rebase
+==========
+git rebase gets all commits from both branches and applies them one by one
+git rebase rewrites commit history but doesn't create extra commit for merging
+changes are not reverted once rebase complete
+git rebase <branchName>   ==  integrate changes from one branch into another branch
+
+
+git tags
+========
+Tags similar to branches, but the difference is that tags are immutable.
+It means, tag is a branch, which nobody intends to modify. Once a tag is created for a particular
+commit, even if you create a new commit, it will not be updated.
+Usually, developers create tags for product releases.
+git tag                                           == it will list the tags in git from remote or local
+git tag -a "tagname" -m "message" <commit-id>     == it will create git tag for particular commit id
+git push --tags                                   == it will push git tags to remote repo
+git tag -d tagName                                == it will delete git tags
+
+
+
+Git stash is meant for developers
+
+git stash
+=========
+sometimes you want to switch the branches, but you are working on an incomplete part of your current project. 
+You don't want to make a commit of half-done work. Git stashing allows you to do so. 
+The git stash command enables you to switch branches without committing the current branch.
+Git stash temporarily shelves (or stashes) changes you've made to your working copy so you can work on something else, and then come back and reapply them later on.
+Stashing is handy if you need to quickly switch context and work on something else, but you're mid-way through a code
+change and aren't quite ready to commit.
+It will try to backup all your changes before you commit. It will do undo the changes.
+
+git stash                   == save your changes in temporary dir and to avoid commid ids
+git stash list              == To display list of stashes
+git stash save "message"    == save number of changes into temporary dir
+git stash apply             == It copies changes stashed to working/index area, entry still remains in the stash
+git stash show -p           == shows the summary of the stash diffs and itconsiders only the latest stash
+git stash pop               == It apply the latest stash and then immediately drop it from your stack.
+git stash pop stash{1}      == It apply the particular stash and then immediately drop it from your stack.
+git stash clear             == Remove the stash entries.
+
+.gitignore
+==========
+it will ignore the files what you added in .gitignore file
+
+Renaming the branches in local
+===============================
+By using git branch command we can rename git branch
+
+In Current Branch
+=================
+git branch -m <newBranchName>
+
+In other Branch
+===============
+git branch -m <oldBranchName> <newBranchName>
+
+
+git hooks/triggers/wrapper scripts
+===================================
+git hooks are the scripts which trigger when you perform a specific action in git.these are useful to automate the task.
+we can apply the script in two ways
+1.before executing the command(pre-step)
+2.after executing the command(post-step)
+two types of git hooks
+======================
+client side hooks are triggered by operations such as commiting and merging
+server side hooks are triggered by network operations such as receiving pushed commits
+
+After you are initialising the git repo, using git init command, it will create a folder called .git and it contains some subfolders called hooks, branches, info, objects and refs...etc
+Example:
+-------
+git init
+cd .git
+cd hooks
+ls –lrt
+Rename the sample extension files
+mv pre-commit.sample pre-commit
+mv commit-msg.sample commit-msg
+Update the pre-commit and commit-msg files
+then add and commit the files you will get pre-commit and post-commit message
+
+
+
+
+Branching Stratagies
+====================
+
+Master branch:
+==============
+Master must contain well tested code, application release happens from this branch by creating a
+release ‘tag’. All development code is merged into master in sometime. In real world no one
+directly work on master.
+
+Develop branch:
+===============
+This branch belongs to a specific team, code integration of this team members are done on this
+branch. Develop branch is created from master. This branch contains pre-production code. When
+the features are finished then they are merged into develop branch.
+
+Feature branch:
+===============
+Feature branch belongs to a specific developer, where his feature in implemented, after completion
+of a feature changes are merged into his develop branch. Feature branch is created from develop
+branch.
+
+Release/UAT branch:
+===================
+This branch is to integrate changes done by multiple teams under their develop branch. Release
+branches support preparation of a new production release. They allow many minor bug to be fixed
+and preparation of meta-data for a release. May branch off from develop and must merge into
+master and develop.
+
+Bugfix branch:
+=============
+This branch is used for fixing UAT defects.Bugfixes branch is created from release. Bugfix branches
+are necessary to act immediately upon an undesired status of release. May branch off from release
+and must merge into release branch.
+
+Hotfix branch:
+==============
+This branch is used for fixing production defects. Hotfixes branch is created from master. Hotfix
+branches are necessary to act immediately upon an undesired status of master. May branch off
+from master and must merge into master and develop.
+
+
+
+Merge conflicts
+================
+When two branches are trying to merge, and both are edited at the same time and in the same file,
+Git won't be able to identify which version is to take for changes. Such a situation is called merge
+conflict. If such a situation occurs, it stops just before the merge commit so that you can resolve the
+conflicts manually.
+1. Resolving merge conflicts manually
+======================================
+We are trying to merge one branch to another branch with same file the conflicts will come.By
+update the file with require content we will resolve the issue.
+
+2. Resolving merge conflicts using merge tools.
+==============================================
+Download diffmerge tool and need to configure
+git config --global diff.tool diffmerge
+git config --global difftool.diffmerge.cmd 'C:/Program\
+Files/SourceGear/Common/DiffMerge/sgdm.exe "$LOCAL" "$REMOTE"'
+git config --global merge.tool diffmerge
+git config --global mergetool.diffmerge.trustExitCode true
+git config --global mergetool.diffmerge.cmd 'C:/Program\
+Files/SourceGear/Common/DiffMerge/sgdm.exe -merge -result="$MERGED" "$LOCAL"
+"$BASE" "$REMOTE"'
+

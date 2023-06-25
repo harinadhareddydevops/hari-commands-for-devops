@@ -1,0 +1,2993 @@
+Sample Playbook
+===============
+Write Playbook with variables
+---
+- name: This is play-1
+  hosts: webservers
+  vars:
+    my_content: "This file created using vars concept placing webservers......................../n"
+  tasks:
+    - name: Adding the variable value
+      copy:
+        dest: /tmp/var_file_web.txt
+        content: "{{ my_content }}"
+
+- name: This is play-2
+  hosts: appservers
+  vars:
+    my_content: "This file created using vars concept placing appservers ............................/n"
+  tasks:
+    - name: Adding the variable value
+      copy:
+        dest: /tmp/var_file_app.txt
+        content: "{{ my_content }}"
+
+===================================================================================================================
+Reading and printing variable value from command line
+
+---
+ - name: This is for prompting variables
+   hosts: all
+   vars_prompt:
+     name: varl
+     prompt: Enter any value ?
+   tasks:
+     - name: This is used to print a variable value
+       debug:
+         msg: "The value of your variable is: {{ varl }}"
+         
+         
+===================================================================================================================
+
+---
+ - name: This is for prompting variables
+   hosts: all
+   vars_prompt:
+     - name: "username"
+       prompt: "Please enter the username ?"
+       private: no
+
+     - name: "password"
+       prompt: "Please enter the password ?"
+       private: yes
+
+   tasks:
+     - name: username && password is
+       debug:
+         msg: "The value of Username and Password variable is: {{ username }} and {{ password }}"
+
+===================================================================================================================
+
+Command line variables
+======================
+
+- name: This is a play
+  hosts: all
+  tasks:
+    - name: Printing/Reading the values from prompt
+      debug:
+        msg: The value of var1= {{var1}} and var2={{var2}}"
+        
+Command: 
+ansible-playbook first.yml --extra-vars "var1=devops var2=aws"
+ansible-playbook first.yml -e "var1=devops var2=aws"
+ 
+
+
+---
+- hosts: localhost
+  gather_facts: no
+ 
+  tasks:
+  - name: ansible extra vars list command line
+    debug:
+      msg: "Hi This Is  {{ var1 }}"
+ 
+  - name: ansible extra vars list
+    debug:
+      msg: "Hi This Is  {{ names[1] }}"
+
+ ansible-playbook list.yml -e '{"var1":"psddevops","names":["rohit","raja","rani","seeta"]}' 
+ ansible-playbook list.yml --extra-vars '{"var1":"psddevops","names":["rohit","raja","rani","seeta"]}' 
+
+
+===================================================================================================================
+From different file
+===================
+- hosts: all
+  vars_files:
+    - "./vars.yml"
+  tasks:
+    - name: Adding the variable value
+      copy:
+        dest: /tmp/files.txt
+        content: "{{ my_content }}"
+        
+vars.yml
+========
+my_content: "This file created using var concept"
+
+===================================================================================================================
+
+Run a Task with sudo – Ansible become --- Host level
+====================================================
+
+
+---
+  - name: Playbook
+    hosts: all
+    become: yes
+    tasks:
+      - name: ensure apache is at the latest version
+        yum:
+          name: httpd
+          state: latest
+      - name: ensure apache is running
+        service:
+          name: httpd
+          state: started
+
+===================================================================================================================
+
+Ansible Become User --Task level
+================================
+
+---
+  - name: Playbook
+    hosts: webservers
+    tasks:
+      - name: ensure apache is at the latest version
+        yum:
+          name: httpd
+          state: latest
+        become: yes
+        become_user: root
+        
+      - name: ensure apache is running
+        service:
+          name: httpd
+          state: restarted
+        become: yes
+        become_user: root
+
+
+===================================================================================================================
+
+Ansible dry run/check mode
+==========================
+
+---
+  - name: Playbook
+    hosts: all
+    become: yes
+    tasks:
+      - name: ensure apache is at the latest version
+        yum:
+          name: httpd
+          state: latest
+      - name: ensure apache is running
+        service:
+          name: httpd
+          state: started
+
+Command
+=======
+ansible-playbook first.yml -C
+        OR
+ansible-playbook first.yml --check
+===================================================================================================================
+Printing Variable Value
+========================
+
+- hosts: localhost
+  vars:
+    my_content: "This file created using var concept"
+  tasks:
+    - name: Printing the variable vaalue
+      debug:
+        var: my_content
+
+
+===================================================================================================================
+Printing Variable Value with Adding Some Extra Message
+======================================================
+
+- hosts: localhost
+  vars:
+    my_content: "This file created using var concept"
+  tasks:
+    - name: Printing the variable vaalue
+      debug:
+        msg: "this is sample {{  my_content }}"
+
+
+===================================================================================================================
+Ansible Debug Msg with Examples
+===============================
+---
+- hosts: localhost
+  gather_facts: yes
+  
+  tasks:
+ 
+  - name: executing sample command
+    shell: echo "PSD DevOps"
+    register: data
+ 
+  - name: printing variable
+    debug:
+      var: data
+ 
+  - name: printing variable with stdout
+    debug:
+      var: data.stdout
+      
+      
+Ansible Debug Msg with Examples
+===============================
+---
+- hosts: localhost
+  gather_facts: yes
+  
+  tasks:
+ 
+  - name: executing sample command
+    shell: echo "PSD DevOps"
+    register: data
+ 
+  - name: printing variable
+    debug:
+      var: data
+ 
+  - name: printing variable with stdout
+    debug:
+      var: data.stdout
+
+  - name: printing variable with cmd
+    debug:
+      var: data.cmd
+ 
+  - name: printing variable with changed
+    debug:
+      var: data.changed
+
+  - name: printing variable with delta
+    debug:
+      var: data.delta
+ 
+  - name: printing variable with end
+    debug:
+      var: data.end
+
+  - name: printing variable with failed
+    debug:
+      var: data.failed
+      
+  - name: printing variable with rc
+    debug:
+      var: data.rc
+ 
+  - name: printing variable with start
+    debug:
+      var: data.start
+
+  - name: printing variable with stderr
+    debug:
+      var: data.stderr
+      
+  - name: printing variable with stderr_lines
+    debug:
+      var: data.stderr_lines
+ 
+  - name: printing variable with stdout_lines
+    debug:
+      var: data.stdout_lines
+===================================================================================================================
+Ansible register module with an example
+=======================================
+
+---
+- hosts: webservers
+  gather_facts: no
+  become: yes
+  tasks:
+  - name: starting httpd
+    service: name=httpd state=started enabled=yes
+
+  - name: httpd status
+    command: service httpd status
+    register: httpd_status
+
+  - name: httpd status output
+    debug:
+      var: httpd_status
+
+
+===================================================================================================================
+
+Ansible register module stdout_lines
+====================================
+
+---
+- hosts: webservers
+  gather_facts: no
+  become: yes
+  tasks:
+  - name: starting httpd
+    service: name=httpd state=started enabled=yes
+
+  - name: httpd status
+    command: service httpd status
+    register: httpd_status
+
+  - name: httpd status output
+    debug:
+      var: httpd_status.stdout_lines
+
+===================================================================================================================
+delegate module demo
+====================
+
+- name: delegate module demo
+  hosts: webservers
+  vars:
+    my_content: "sample_test ...."
+  tasks:
+    - name: Adding the variable value
+      copy:
+        dest: /tmp/delegate.txt
+        content: "{{ my_content }}"
+      delegate_to: s2
+
+
+===================================================================================================================
+delegate module demo on localhost
+=================================
+
+- name: delegate module demo
+  hosts: webservers
+  vars:
+    my_content: "sample_test"
+  tasks:
+    - name: Adding the variable value
+      copy:
+        dest: /tmp/delegate.txt
+        content: "{{ my_content }}"
+      delegate_to: localhost
+      
+===================================================================================================================
+
+run_once module demo
+====================
+
+- name: run_once module demo
+  hosts: webservers
+  vars:
+    my_content: "sample_test “
+  tasks:
+    - name: Adding the variable value
+      copy:
+        dest: /tmp/runonce.txt
+        content: "{{ my_content }}"
+      run_once: true 
+
+===================================================================================================================
+Installing/Uninstalling/Updating packages
+========================================
+
+- hosts: all
+  become: yes  
+  tasks:  
+  - name: Install yum package in Ansible example  
+    yum:  
+      name: git  
+      state: present/absent/latest
+  - name: Install yum package in Ansible example  
+    yum:  
+      name: tree 
+      state: present/absent/latest
+
+
+
+Installing multiple softwares
+=============================
+
+- hosts: all
+  become: yes
+  tasks:
+    - name: Install yum package in Ansible example
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - git
+        - httpd
+        - mutt
+
+
+===================================================================================================================
+Updatting all pkgs
+==================
+
+- hosts: all
+  become: yes
+  tasks:
+  - name: Install yum package in Ansible example
+    yum:
+      name: "*"
+      state: latest
+
+
+===================================================================================================================
+Excluding specific pkgs
+=======================
+
+- hosts: all
+  become: yes
+  tasks:
+  - name: Install yum package in Ansible example
+    yum:
+      name: "*"
+      state: latest
+      exclude: httpd*
+
+  - name: install the nginx rpm from a remote repo
+    yum:
+      name: http://nginx.org/packages/centos/6/noarch/RPMS/nginx-release-centos-6-0.el6.ngx.noarch.rpm
+      state: present
+
+===================================================================================================================
+service
+=======
+- hosts: all
+  become: yes
+  tasks:
+    - name: Make sure a httpd is installed
+      service: 
+        name=httpd 
+        state=started
+
+systemd
+=======        
+ - hosts: all
+  become: yes
+  tasks:
+    - name: Make sure a httpd service is running
+      systemd: 
+        name=httpd 
+        state=stopped
+
+===================================================================================================================
+- hosts: localhost
+  tasks:
+    - name: Ansible loop with index example
+      debug:
+        msg: "echo loop index at {{ item.0 }} and value at {{item.1}}"
+      with_indexed_items:
+        - "hello1"
+        - "hello2"
+        - "hello3"
+
+- hosts: localhost
+  tasks:
+    - name: Ansible loop with index example
+      debug:
+        msg: "echo loop index at {{ item.0 +1}} and value at {{item.1}}"
+      with_indexed_items:
+        - "hello1"
+        - "hello2"
+        - "hello3"
+
+
+- hosts: localhost
+  vars:
+    States:
+      AP: 'Visakhapatnam'
+      TS: 'Hyderabad'
+      KTK: 'Bangalore'
+      TN: 'Chennai'
+  tasks:
+    - name: Ansible dictionary loop Example
+      debug:
+        msg: "State is {{ item.key}} and Capital is {{item.value}}"
+      with_dict: "{{ States }}"
+      
+      
+ - hosts: localhost
+  tasks:
+    - name: with_list
+      debug:
+        msg: "{{ item }}"
+      with_list:
+        - one
+        - two
+
+    - name: with_list -> loop
+      debug:
+        msg: "{{ item }}"
+      loop:
+        - one
+        - two
+
+===================================================================================================================
+When conditions
+===============
+---
+- hosts: all
+  become: yes
+  gather_facts: no
+
+  tasks:
+    - name: verify httpd version
+      command: /usr/sbin/httpd -v
+      register: version
+      ignore_errors: True
+
+    - name: print httpd version
+      debug:
+        msg: "{{ version }}"
+      when: "version.rc == 0"
+
+    - name: install httpd
+      yum: name=httpd state=present
+      register: version1
+      when: "version.rc != 0 "
+    - name: install httpd version
+      debug:
+        msg: "{{ version1 }}"
+
+
+
+---
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Ansible check file exists
+      stat:
+        path: /tmp/devopsaws.txt
+      register: result
+
+    - name: Ansible check file exists example.
+      command: cp /tmp/devopsaws.txt /tmp/devopsaws_12032020.txt
+      when: result.stat.exists
+
+    - name: Ansible create the file
+      command: touch /tmp/devopsaws.txt
+      when: result.stat.exists == false
+      
+
+
+---
+ - name: Find files - Playbook
+   hosts: localhost
+   tasks:
+
+   # Case1:  when Search String and Modified time is mentioned
+     - name:  Find command with *SEARCH STRING* and *MODIFIED TIME*
+       shell: "find {{Directory}} -name '{{SearchString}}' -mtime '{{mtime}}'"
+       register: case1output
+       when: Directory is defined and SearchString is defined and mtime is defined
+       ignore_errors: true
+
+   # Case2: when Only Search String is mentioend but NOT Modified time(age)
+     - name:  Find command with only with *SEARCH STRING*
+       shell: "find {{Directory}} -name '{{SearchString}}' "
+       register: case2output
+       when: Directory is defined and SearchString is defined and mtime is not defined
+       ignore_errors: true
+
+   # In case of Case1 Success
+     - name: Case1 Output -- Output will be displayed only if Case is Success (or) it will be skipped
+       debug: var=case1output.stdout_lines
+       when: case1output.stdout_lines is defined
+
+   # In case of Case2 Success
+     - name: Case2 Output -- Output will be displayed only if Case is Success (or) it will be skipped
+       debug: var=case2output.stdout_lines
+       when: case2output.stdout_lines is defined
+
+
+
+
+Command:
+=======
+ansible-playbook test.yml -e "Directory=/home/ansadmin/myansible/testdir SearchString=*.txt mtime=30"
+ansible-playbook test.yml -e "Directory=/home/ansadmin/myansible/testdir SearchString=*.txt"
+    
+      
+===================================================================================================================
+wait_for module
+===============
+
+---
+- name: A Playbook to test Async and Poll
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: Install httpd
+      yum:
+        name: httpd
+        state: present
+
+    - name: wait for the service
+      wait_for:
+        timeout: 60
+
+    - name: start the service
+      service:
+        name: httpd
+        state: started
+
+
+===================================================================================================================
+async_poll example
+==================
+---
+
+- hosts: all
+  become: yes
+  gather_facts: no
+
+  tasks:
+    - name: ansible async poll
+      command: /bin/sleep 20
+      async: 60
+      poll: 10
+      
+      
+---
+  # Running tasks parallel
+- hosts: webservers
+  become: yes
+  gather_facts: no
+
+  tasks:
+    - name: Install Apache
+      yum:
+        name: httpd
+        state: present
+      async: 300
+      poll:  10
+    - name: restart httpd
+      service:
+        name: httpd
+        state: started
+
+
+===================================================================================================================
+Groups examples
+===============
+- name: Create groups in remote machines
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: create a group in target
+      group:
+        name: cricket
+        state: present
+
+
+
+
+- name: Create groups in remote machines
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: create a group in target
+      group:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - hockey
+        - tennis
+        - kabadi
+
+- name: Create groups in remote machines
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: create a group in target
+      group:
+        name: cricket
+        state: absent
+
+
+- name: Create groups in remote machines
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: create a group in target
+      group:
+        name: "{{ item }}"
+        state: absent
+      with_items:
+        - hockey
+        - tennis
+        - kabadi
+
+===================================================================================================================
+users examples
+==============
+- name: Create groups and users in remote machines
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: create a group in target
+      group:
+        name: cricket
+        state: present
+    - name: create a user in cricket group
+      user:
+        name: rohit
+        group: cricket
+
+Change Primary Group of User
+============================
+
+- name: Create groups in remote machines
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: create a group in target
+      group:
+        name: ipl
+        state: present
+    - name: create a user in cricket group
+      user:
+        name: rohit
+        group: ipl
+
+Adding multiple users to the group
+==================================
+- name: Create groups in remote machines
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: create a user in cricket group
+      user:
+        name: "{{ item }}"
+        group: ipl
+      with_items:
+        - bumrha
+        - rahul
+        - dawan
+
+Deleting multiple users to the group
+====================================
+- name: Create groups in remote machines
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: create a user in cricket group
+      user:
+        name: "{{ item }}"
+        state: absent
+        remove: yes
+      with_items:
+        - bumrha
+        - rahul
+        - dawan
+        - rohit
+
+===================================================================================================================
+File creation 
+=============
+- name: This is a play
+  hosts: webservers
+  tasks:
+     - name: create file in a remote server
+       file:
+         path: /home/ansadmin/filemodule/devops.txt
+         state: touch
+
+
+- name: This is a play
+  hosts: webservers
+  tasks:
+     - name: delete file in a remote server
+       file:
+         path: /home/ansadmin/filemodule/devops.txt
+         state: absent
+
+
+- name: This is a play
+  hosts: webservers
+  tasks:
+    - name: Ansible file module to create new file with permissions.
+      file:
+        path: /home/ansadmin/filemodule/permission.txt
+        state: touch
+        mode: 0421       
+        owner: ansadmin
+   
+
+- name: This is a play
+  hosts: webservers
+  tasks:
+    - name: Ansible file module to create new file with permissions.
+      file:
+        path: /home/ansadmin/filemodule/permission.txt
+        state: touch
+        mode: "u=rw,g=rw,o=r"        
+        owner: ansadmin   
+
+Multiple files creation
+=======================
+
+- name: This is a play
+  hosts: webservers
+  tasks:
+    - name: Ansible file module to create multiple files
+      file:
+        path: "/home/ansadmin/filemodule/{{ item }}"
+        state: touch
+        mode: 0664
+      with_items:
+        - devops1.txt
+        - devops2.txt
+        - devops3.txt
+        - devops4.txt
+        - devops5.txt
+        - devops6.txt
+
+
+Multiple files deletion
+=======================
+
+- name: This is a play
+  hosts: webservers
+  tasks:
+    - name: Ansible file module to create multiple files
+      file:
+        path: "/home/ansadmin/filemodule/{{ item }}"
+        state: absent
+        mode: 0664
+      with_items:
+        - devops1.txt
+        - devops2.txt
+        - devops3.txt
+        - devops4.txt
+        - devops5.txt
+        - devops6.txt
+
+
+===================================================================================================================
+unarchive module 
+================
+- name: This is a play
+  hosts: webservers
+  tasks:
+    - name: Extract apache-maven-3.6.3-bin.tar.gz
+      unarchive:
+        src: /home/ansadmin/apache-tomcat-8.5.51.tar.gz
+        dest: /home/ansadmin/
+        remote_src: yes
+
+
+- name: This is a play
+  hosts: webservers
+
+  tasks:
+
+    - name: Unarchive a file that needs to be downloaded
+      unarchive:
+        src: https://www-eu.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
+        dest: /home/ansadmin
+        remote_src: yes
+
+===================================================================================================================
+git_module demo
+===============
+
+---
+- hosts: all
+  gather_facts: no
+  vars:
+    username: psddevops
+    token: fe47b41e9c5ea1cd6345bd7962f0a75a44ad35b3
+    repo_name: sampletest
+
+  tasks:
+    - name: Checkout The Code From Github Using Ansible.
+      git:
+        repo: 'https://{{ token }}@github.com/{{ username }}/{{ repo_name }}.git'
+        dest: /home/ansadmin/sample/
+
+===================================================================================================================
+command module demo
+===================
+
+
+---
+- name: command modules demo
+  hosts: all
+  gather_facts: no
+  become: yes
+  tasks:
+   - name: Executing a command using the command module
+     command: cat /home/ansadmin/helloworld.txt
+     register: data
+   - debug:
+       var: data.stdout_lines
+
+---
+- hosts: all
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: ansible command with chdir and executable parameters
+      command: ls -lrt
+      args:
+        chdir: /home/ansadmin
+        executable: /bin/bash
+      register: data
+    - debug:
+        var: data.stdout_lines
+
+
+---
+- hosts: all
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: Ansible command module multiple commands
+      command: "touch {{ item }}"
+      with_items:
+       - hello1.txt
+       - hello2.txt
+       - hello3.txt
+      args:
+        chdir: /tmp
+        
+        
+---
+  - name: Check the remote host servers
+    hosts: all
+    become: yes
+    tasks:
+      - name: Execute the Uptime command over Command module
+        register: uptimeoutput
+        command: "uptime"
+      - debug:
+          var: uptimeoutput.stdout_lines
+
+      - name: Execute the UNAME command
+        register: unameout
+        command: "uname -a"
+      - debug:
+          var: unameout.stdout_lines
+
+      - name: Execute the df command
+        register: dfout
+        command: "df -h"
+      - debug:
+          var: dfout.stdout_lines
+===================================================================================================================
+Shell module demo
+=================
+---
+  - name: Check the date on remote host servers
+    hosts: all
+    become: yes
+    tasks:
+      - name: Check Date with Shell command
+        shell:
+           "date"
+        register: datecmd
+      - debug: msg="{{datecmd.stdout}}"
+
+
+===================================================================================================================
+git_maven_java_tomcat
+=====================
+---
+- name: Playbook to download and install tomcat8
+  hosts: all
+  become: yes
+  vars:
+    username: psddevops
+    token: fe47b41e9c5ea1cd6345bd7962f0a75a44ad35b3
+    repo_name: sampletest
+
+  tasks:
+    - name: install Git
+      become: yes
+      yum:
+        name: git
+        state: present
+      register: git_output
+    - debug:
+        var: git_output.stdout
+
+    - name: Checkout The Code From Github Using Ansible.
+      git:
+        repo: 'https://{{ token }}@github.com/{{ username }}/{{ repo_name }}.git'
+        dest: /home/ansadmin/psddevops
+      register: git_checkout
+    - debug:
+        var: git_checkout.stdout_lines
+    - name: download and install java rpm
+      yum:
+        name: https://corretto.aws/downloads/latest/amazon-corretto-8-x64-linux-jdk.rpm
+        state: present
+      register: java_output
+    - debug:
+        var: java_output.stdout_lines
+
+    - name: crate a directory
+      become: yes
+      file:
+        path: "/opt/tomcat8"
+        state: directory
+        mode: 0755
+
+    - name: Download and install tomcat
+      unarchive:
+        src: "https://downloads.apache.org/tomcat/tomcat-8/v8.5.51/bin/apache-tomcat-8.5.51.tar.gz"
+        dest: "/opt/tomcat8/"
+        mode: 0755
+        remote_src: yes
+      register: tcinstall
+    - debug:
+        var: tcinstall.stdout_lines
+
+    - name: Download and install maven
+      unarchive:
+        src: "https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz"
+        dest: "/opt/"
+        mode: 0755
+        remote_src: yes
+      register: maveninstall
+    - debug:
+        var: maveninstall.stdout_lines
+
+    - name: maven configuration and compilateion
+      shell: |
+        echo -e "\n rename the maven"
+        cd /opt
+        mv apache-maven-3.6.3 maven
+        echo -e "\n setting the path for maven"
+        PATH=$PATH:/opt/maven/bin:/usr/lib/jvm/java-1.8.0-amazon-corretto/bin
+        export PATH
+        cd /home/ansadmin/psddevops
+        mvn clean package
+        cp ./target/psdapp.war /opt/tomcat8/apache-tomcat-8.5.51/webapps/
+
+    - name: crete group "tomcat"
+      group:
+        name: tomcat
+        state: present
+      ignore_errors: true
+    - name: Add the user 'tomcat'
+      user:
+        name: tomcat
+        group: tomcat
+      ignore_errors: true
+
+    - name: create a link
+      file:
+        src:  /opt/tomcat8/apache-tomcat-8.5.51
+        dest: /usr/share/tomcat8
+        state: link
+        force: yes
+
+    - name: Change ownership of Tomcat installation
+      file: path=/usr/share/tomcat8/ owner=tomcat group=tomcat state=directory recurse=yes
+
+    - name: Configure Tomcat as a service
+      copy: src=tomcat-initscript.sh dest=/etc/init.d/tomcat mode=0755
+
+    - name: Start the tomcat
+      service:
+        name: tomcat
+        state: started
+        enabled: yes
+
+
+tomcat-initscript.sh
+====================
+
+
+#!/bin/bash
+#
+# chkconfig: 345 99 28
+# description: Starts/Stops Apache Tomcat
+#
+# Tomcat 7 start/stop/status script
+# Forked from: https://gist.github.com/valotas/1000094
+# @author: Miglen Evlogiev <bash@miglen.com>
+#
+# Release updates:
+# Updated method for gathering pid of the current proccess
+# Added usage of CATALINA_BASE
+# Added coloring and additional status
+# Added check for existence of the tomcat user
+#
+
+#Location of JAVA_HOME (bin files)
+export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.242.b08-0.amzn2.0.1.x86_64/jre
+
+#Add Java binary files to PATH
+export PATH=$JAVA_HOME/bin:$PATH
+
+#CATALINA_HOME is the location of the bin files of Tomcat
+export CATALINA_HOME=/opt/tomcat8/apache-tomcat-8.5.51
+
+#CATALINA_BASE is the location of the configuration files of this instance of Tomcat
+export CATALINA_BASE=/usr/share/tomcat8
+
+#TOMCAT_USER is the default user of tomcat
+export TOMCAT_USER=tomcat
+
+#TOMCAT_USAGE is the message if this script is called without any options
+TOMCAT_USAGE="Usage: $0 {\e[00;32mstart\e[00m|\e[00;31mstop\e[00m|\e[00;32mstatus\e[00m|\e[00;31mrestart\e[00m}"
+
+#SHUTDOWN_WAIT is wait time in seconds for java proccess to stop
+SHUTDOWN_WAIT=20
+
+tomcat_pid() {
+        echo `ps -fe | grep $CATALINA_BASE | grep -v grep | tr -s " "|cut -d" " -f2`
+}
+
+start() {
+  pid=$(tomcat_pid)
+  if [ -n "$pid" ]
+  then
+    echo -e "\e[00;31mTomcat is already running (pid: $pid)\e[00m"
+  else
+    # Start tomcat
+    echo -e "\e[00;32mStarting tomcat\e[00m"
+    #ulimit -n 100000
+    #umask 007
+    #/bin/su -p -s /bin/sh tomcat
+        if [ `user_exists $TOMCAT_USER` = "1" ]
+        then
+                su $TOMCAT_USER -c $CATALINA_HOME/bin/startup.sh
+        else
+                sh $CATALINA_HOME/bin/startup.sh
+        fi
+        status
+  fi
+  return 0
+}
+
+status(){
+          pid=$(tomcat_pid)
+          if [ -n "$pid" ]; then echo -e "\e[00;32mTomcat is running with pid: $pid\e[00m"
+          else echo -e "\e[00;31mTomcat is not running\e[00m"
+          fi
+}
+
+stop() {
+  pid=$(tomcat_pid)
+  if [ -n "$pid" ]
+  then
+    echo -e "\e[00;31mStoping Tomcat\e[00m"
+    #/bin/su -p -s /bin/sh tomcat
+        sh $CATALINA_HOME/bin/shutdown.sh
+
+    let kwait=$SHUTDOWN_WAIT
+    count=0;
+    until [ `ps -p $pid | grep -c $pid` = '0' ] || [ $count -gt $kwait ]
+    do
+      echo -n -e "\n\e[00;31mwaiting for processes to exit\e[00m";
+      sleep 1
+      let count=$count+1;
+    done
+
+    if [ $count -gt $kwait ]; then
+      echo -n -e "\n\e[00;31mkilling processes which didn't stop after $SHUTDOWN_WAIT seconds\e[00m"
+      kill -9 $pid
+    fi
+  else
+    echo -e "\e[00;31mTomcat is not running\e[00m"
+  fi
+
+  return 0
+}
+
+user_exists(){
+        if id -u $1 >/dev/null 2>&1; then
+        echo "1"
+        else
+                echo "0"
+        fi
+}
+
+case $1 in
+
+        start)
+          start
+        ;;
+
+        stop)
+          stop
+        ;;
+
+        restart)
+          stop
+          start
+        ;;
+
+        status)
+                status
+
+        ;;
+
+        *)
+                echo -e $TOMCAT_USAGE
+        ;;
+esac
+exit 0
+
+
+Updated code
+============
+
+---
+- name: Playbook to download and install tomcat8
+  hosts: all
+  become: yes
+  vars:
+    username: psddevops
+    token: ec9d052e859cd397ec6dc1d47da4381d3f4b2ca0
+    repo_name: sampletest
+
+  tasks:
+    - name: install Git
+      become: yes
+      yum:
+        name: git
+        state: present
+      register: git_output
+    - debug:
+        var: git_output
+
+    - name: Checkout The Code From Github Using Ansible.
+      git:
+        repo: 'https://{{ token }}@github.com/{{ username }}/{{ repo_name }}.git'
+        dest: /home/ansadmin/psddevops
+      register: git_checkout
+    - debug:
+        var: git_checkout
+
+    - name: download and install java rpm
+      yum:
+        name: https://corretto.aws/downloads/latest/amazon-corretto-8-x64-linux-jdk.rpm
+        state: present
+      register: java_output
+    - debug:
+        var: java_output
+
+    - name: crate a directory
+      become: yes
+      file:
+        path: "/opt/tomcat8"
+        state: directory
+        mode: 0777
+
+    - name: Download and install tomcat
+      unarchive:
+        src: "https://downloads.apache.org/tomcat/tomcat-8/v8.5.55/bin/apache-tomcat-8.5.55.tar.gz"
+        dest: "/opt/tomcat8/"
+        mode: 0777
+        remote_src: yes
+      register: tcinstall
+    - debug:
+        var: tcinstall
+
+    - name: Download and install maven
+      unarchive:
+        src: "https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz"
+        dest: "/opt/"
+        mode: 0755
+        remote_src: yes
+      register: maveninstall
+    - debug:
+        var: maveninstall
+
+    - name: maven configuration and compilateion
+      shell: |
+        echo -e "\n rename the maven"
+        cd /opt
+        mv apache-maven-3.6.3 maven
+        echo -e "\n setting the path for maven"
+        PATH=$PATH:/opt/maven/bin:/usr/lib/jvm/java-1.8.0-amazon-corretto/bin
+        export PATH
+        cd /home/ansadmin/psddevops
+        mvn clean package
+        cp ./target/psdapp.war /opt/tomcat8/apache-tomcat-8.5.55/webapps/
+
+    - name: crete group "tomcat"
+      group:
+        name: tomcat
+        state: present
+      ignore_errors: true
+
+    - name: Add the user 'tomcat'
+      user:
+        name: tomcat
+        group: tomcat
+      ignore_errors: true
+
+    - name: create a link
+      file:
+        src:  /opt/tomcat8/apache-tomcat-8.5.55
+        dest: /usr/share/tomcat8
+        state: link
+        force: yes
+
+    - name: Change ownership of Tomcat installation
+      file: path=/usr/share/tomcat8/ owner=tomcat group=tomcat state=directory recurse=yes
+
+    - name: Configure Tomcat as a service
+      copy: src=tomcat-initscript.sh dest=/etc/init.d/tomcat mode=0777
+
+    - name: Start the tomcat
+      service:
+        name: tomcat
+        state: started
+        enabled: yes
+
+===================================================================================================================
+Copy module demo
+================
+--- 
+- name: copy module demo
+  hosts: all
+  tasks:
+    - name: Copy file to a remote machine
+      copy:
+        src: /home/ansadmin/sample.txt
+        dest: /tmp
+        
+--- 
+- name: copy module demo
+  hosts: all
+  tasks:
+    - name: Copy file to a remote machine
+      copy:
+        src: /home/ansadmin/sample.txt
+        dest: /tmp
+        force: yes        
+   
+---
+- name: copy module demo
+  hosts: all
+  become: yes
+  tasks:
+    - name: Copy directory to a remote machine
+      copy:
+        src: /home/ansadmin/myansible/copydemo
+        dest: /tmp
+
+
+   
+--- 
+- name: copy module demo
+  hosts: all
+  become: yes
+  tasks:
+    - name:  copy a file with permissions
+      copy:
+        src: /home/ansadmin/sample.txt
+        dest: /etc/sample.conf
+        owner: ansadmin
+        group: ansadmin
+        mode: 0644 
+
+    - name:  copy a file with permissions
+      copy:
+        src: /home/ansadmin/sample.txt
+        dest: /tmp/sample.conf
+        owner: ansadmin
+        group: ansadmin
+        mode: "u=rw,g=r,o=r"
+        
+        
+        
+ --- 
+- name: copy module demo
+  hosts: all
+  become: yes
+  tasks:
+    - name: copy multiple files
+      copy: src=/home/ansadmin/{{ item }} dest=/home/ansadmin
+      with_items:
+        - samplefile1.txt
+        - samplefile2.txt
+        - samplefile3.txt
+
+    - name: ansible copy multiple files
+      copy: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+        - { src: '/home/ansadmin/testfile1.txt', dest: '/home' }
+        - { src: '/home/ansadmin/testfile2.txt', dest: '/home/ansadmin' }
+        - { src: '/home/ansadmin/testfile3.txt', dest: '/etc' }
+
+
+==================================================================================================================
+Fetch module demo
+=================
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: ansible copy file from remote to local.
+      fetch:
+        src: /home/ansadmin/fetchfile.txt
+        dest: /home/ansadmin
+       
+
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: ansible copy file from remote to local.
+      fetch:
+        src: /home/ansadmin/fetchfile.txt
+        dest: /home/ansadmin
+        flat: yes
+        
+
+===================================================================================================================
+synchronize module demo
+=======================
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: ansible copy file using synchronize module
+      synchronize:
+        src: /home/ansadmin/synctest.txt
+        dest: /home/ansadmin
+
+
+Copy from S1 to S2 using copy and fetch module
+==============================================
+---
+ - hosts: all
+   become: yes
+   tasks:
+     - name: Fetch the file from the S1 to control machine
+       fetch: src=/home/ansadmin/ansiblefetchdemo.conf dest=buffer/ flat=yes
+       when: "{{ inventory_hostname == 'S1' }}"
+
+     - name: Copy the file from control machine to S2
+       copy: src=buffer/ansiblefetchdemo.conf dest=/home/ansadmin/
+       when: "{{ inventory_hostname == 'S2' }}"
+
+Copy from S1 to S2 using synchronize module pull mechanism
+==========================================================
+
+---
+- name: Sync Pull task
+  hosts: "{{groups['webservers'][0]}}"
+  user: ansadmin
+  tasks:
+    - name: Copy the file from S1 to S2 using Method Pull
+      synchronize:
+        src: "{{ item }}"
+        dest: "{{ item }}"
+        mode: pull
+      delegate_to: "{{groups['webservers'][1]}}"
+      register: syncfile
+      run_once: true
+      with_items:
+       - "/home/ansadmin/ansiblesyncpull.conf"
+
+
+Copy from S1 to S2 using synchronize module push mechanism
+==========================================================
+
+- name: Sync Push task
+  hosts: "{{groups['webservers'][1]}}"
+  user: ansadmin
+  tasks:
+    - name: Copy the file from S1 to S2 using Method Push
+      synchronize:
+        src: "{{ item }}"
+        dest: "{{ item }}"
+        mode: push
+      delegate_to: "{{groups['webservers'][0]}}"
+      register: syncfile
+      with_items:
+       - "/home/ansadmin/ansiblesyncpush.conf"
+
+
+===================================================================================================================
+get_url module demo
+===================
+---
+- name: get_url module demo
+  hosts: localhost
+  vars_prompt:
+    - name: "username"
+      prompt: "Please enter the username ?"
+      private: no
+
+    - name: "password"
+      prompt: "Please enter the password ?"
+      private: yes
+
+  tasks:
+    - name: download the zip file from remote repo
+      get_url:
+        url: https://github.com/psddevops/jenkins_pipelines/raw/master/shell_script.zip
+        url_username: "{{ username }}"
+        url_password: "{{ password }}"
+        dest: /tmp
+
+    - name: Extract shell_script.zip file
+      unarchive:
+        src: /tmp/shell_script.zip
+        dest: /tmp
+        remote_src: yes
+
+    - name: Run the shell script
+      command: sh /tmp/shell_script/sample_script.sh 60
+      register: script_out
+    - debug:
+        var: script_out.stdout_lines
+
+
+Deployment through ansible using get_url
+========================================
+
+- name: get_url module demo Deployment through ansible
+  hosts: all
+  become: yes
+  vars_prompt:
+    - name: "username"
+      prompt: "Please enter the username ?"
+      private: no
+
+    - name: "password"
+      prompt: "Please enter the password ?"
+      private: yes
+
+  tasks:
+    - name: download the zip file from remote repo
+      get_url:
+        url: https://github.com/psddevops/jenkins_pipelines/raw/master/psdapp.war
+        url_username: "{{ username }}"
+        url_password: "{{ password }}"
+        dest: /tmp
+    - name: Copy the war file from temp to tomcat webapps
+      command: "cp /tmp/psdapp.war /opt/tomcat8/apache-tomcat-8.5.51/webapps/"
+    - name: Start the tomcat
+      service:
+        name: tomcat
+        state: started
+        enabled: yes
+    - name: Remove the war file from temp to tomcat webapps
+      command: "rm /tmp/psdapp.war "
+===================================================================================================================
+Blockinfile module demo
+=======================
+---
+- hosts: linux
+  gather_facts: no
+  tasks:
+    - name: add block of lines to a file.
+      blockinfile:
+        path: /home/ansadmin/users.txt
+        block: |
+          Sami
+          Bumraha
+        backup: yes
+
+
+---
+- hosts: linux
+  gather_facts: no
+  tasks:
+    - name: add block of lines to a file.
+      blockinfile:
+        path: /home/ansadmin/users.txt
+        block: |
+          Sami
+          Bumraha
+          jadav
+        backup: no
+===================================================================================================================
+lineinfile module demo
+======================
+---
+- name: lineinfile demo
+  hosts: linux
+  gather_facts: no
+  tasks:
+    - name: Ansible lineinfile module.
+      lineinfile:
+        path: /home/ansadmin/lineinfile.txt
+        line: This is sample line
+        state: present
+        create: yes
+        
+---
+- name: lineinfile demo
+  hosts: linux
+  gather_facts: no
+
+  tasks:
+  - name: Ansible check directory.
+    lineinfile:
+      path: /home/ansadmin/myansible/lineinfile1.txt
+      regexp: '^Amaravathi'
+      line: 'Visakhapatnam is the capital of Andhrapradesh'
+      state: present
+      backrefs: yes
+      
+
+---
+- name: lineinfile demo
+  hosts: linux
+  gather_facts: no
+  tasks:
+  - name: Ansible check directory.
+    lineinfile:
+     path: /home/ansadmin/lineinfile.txt
+     insertafter: '^Visakhapatnam'
+     line: '===================================='
+
+
+---
+- name: lineinfile demo
+  hosts: linux
+  gather_facts: no
+  tasks:
+  - name: Ansible check directory.
+    lineinfile:
+     path: /home/ansadmin/lineinfile.txt
+     insertbefore: '^Visakhapatnam'
+     line: '#==========================================='
+
+---
+- name: lineinfile demo
+  hosts: linux
+  gather_facts: no
+  tasks:
+    - name: Ansible lineinfile remove the line
+      lineinfile:
+        dest: /home/ansadmin/lineinfile.txt
+        line: ====================================
+        state: absent
+
+---
+- name: lineinfile demo
+  hosts: linux
+  gather_facts: no
+  tasks:
+    - name: Ansible lineinfile regexp comment
+      lineinfile:
+        dest: /home/ansadmin/lineinfile.txt
+        regexp: '(Visakhapatnam is the capital of Andhrapradesh)'
+        line: '#\1'
+        backrefs: yes
+
+
+---
+- name: lineinfile demo
+  hosts: linux
+  gather_facts: no
+  tasks:
+    - name: Ansible lineinfile regexp comment
+      lineinfile:
+        dest: /home/ansadmin/lineinfile.txt
+        regexp: '#(Visakhapatnam is the capital of Andhrapradesh)'
+        line: '\1'
+        backrefs: yes
+~
+
+===================================================================================================================
+tags demo
+=========
+---
+ - name: Tags - Playbook
+   hosts: localhost
+
+   vars:
+    dev_var: "This script is going deploy DEV environment"
+    uat_var: "This script is going deploy UAT environment"
+    perf_var: "This script is going deploy PERF environment"
+    prod_var: "This script is going deploy PROD environment"
+    common_var: "This script is execute on all environments"
+
+   tasks:
+     - name: executing the COMMON script
+       debug:
+        var: common_var
+
+     - name: executing the DEV script
+       debug:
+         var: dev_var
+       tags:
+         - dev
+
+     - name: executing the UAT script
+       debug:
+         var: uat_var
+       tags:
+         - uat
+
+     - name: executing the PERF script
+       debug:
+         var: perf_var
+       tags:
+         - perf
+
+     - name: executing the PROD script
+       debug:
+         var: prod_var
+       tags:
+         - prod
+
+
+==================================================================================================================
+apt module demo
+===============
+---
+- name: aptmodule demo
+  hosts: ubuntu
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Update cache and install "apache2" package
+      apt:
+        update_cache: yes
+        name: apache2
+        force_apt_get: yes
+    - name: Update cache and install "git" package
+      apt:
+        update_cache: yes
+        name: git
+        force_apt_get: yes
+
+
+---
+- name: aptmodule demo
+  hosts: ubuntu
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Install a list of packages
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+        state: present
+        force_apt_get: yes
+      with_items:
+        - 'git'
+        - 'apache2'
+
+---
+- name: aptmodule demo
+  hosts: ubuntu
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Install a list of packages
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+        state: absent
+        force_apt_get: yes
+      with_items:
+        - 'git'
+        - 'apache2'
+
+---
+- name: aptmodule demo
+  hosts: ubuntu
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Only run "update_cache=yes" if the last one is more than 1 hour ago
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+
+---
+ - name: Ansible apt module examples
+   hosts: ubuntu
+   become: yes
+   tasks:
+    - name: Ansible Update Cache and Upgrade all Packages
+      register: updatesys
+      apt:
+        name: "*"
+        state: latest
+        update_cache: yes
+
+    - name: Display the last line of the previous task to check the stats
+      debug:
+        msg:  "{{updatesys.stdout_lines}}"
+
+
+---
+ - name: Ansible apt module examples
+   hosts: ubuntu
+   become: yes
+   tasks: 
+    - name: Ansible install filebeat deb file from url
+      apt: 
+        deb: https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.6.0-amd64.deb
+        
+---
+ - name: Ansible validate if the packages are installed
+   hosts: ubuntu
+   become: yes
+   tasks:
+
+    - name: Gather Package facts
+      package_facts:
+        manager: auto
+
+    - name: Validating if the package is installed or not
+      debug:
+        msg: "{{item}} is installed"
+      when: '"{{item}}" in ansible_facts.packages'
+      with_items:
+        - apache2
+        - filebeat
+        - git
+
+---
+ - name: Ansible remove useless packages
+   hosts: ubuntu
+   become: yes
+   tasks:
+
+    - name: Remove useless packages from the cache
+      apt:
+        autoclean: yes
+
+    - name: Remove dependencies that are no longer required
+      apt:
+        autoremove: yes
+
+==================================================================================================================
+ansible-vault demo
+==================
+- hosts: localhost
+  become: yes
+  gather_facts: no
+  vars_files:
+    - "./mysecretdata.yml"
+  tasks:
+    - name: Adding the username value
+      copy:
+        dest: /tmp/files_username.txt
+        content: "{{ username }}"
+    - name: Adding the password value
+      copy:
+        dest: /tmp/files_password.txt
+        content: "{{ password }}"
+    - name: Printing/Reading the values from prompt
+      debug:
+        msg: "The capital of {{ state }} is {{ capital }}"
+        
+mysecretdata.yml
+================
+username: "India"
+password: "Newdelhi"
+state: "Karnataka"
+capital: "Bangalore"
+
+
+===== commands =======
+>> ansible-vault encrypt mysecretdata.yml
+
+>> ansible-vault view mysecretdata.yml
+
+>> ansible-vault edit mysecretdata.yml
+
+>> ansible-vault rekey mysecretdata.yml
+
+>> ansible-vault decrypt mysecretdata.yml
+
+
+==================================================================================================================
+ignore_errors demo
+==================
+---
+- hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: deleting a file
+      command: "rm /home/ansadmin/ppreddy.txt"
+      ignore_errors: true
+    - debug:
+        msg: "ansible_os_family"
+
+=======
+
+---
+ - name: Ansible ignore_errors examples
+   hosts: linux
+   become: yes
+   tasks: 
+    - name: list out the files from cricket
+      command: "ls -lrt /home/ansadmin/cricket"
+      register: cricket_out
+      ignore_errors: true
+
+    - debug:
+        var: cricket_out
+      
+    - name: list out the files from tennis
+      command: "ls -lrt /home/ansadmin/tennis"
+      register: tennis_out
+      ignore_errors: true
+    - debug:
+        var: tennis_out
+      
+
+    - name: list out the files from hockey
+      command: "ls -lrt /home/ansadmin/hockey"
+      register: hockey_out
+      ignore_errors: true
+    - debug:
+        var: hockey_out
+      
+
+    - name: list out the files from kabaddi
+      command: "ls -lrt /home/ansadmin/kabaddi"
+      register: kabaddi_out
+      ignore_errors: true
+    - debug:
+        var: kabaddi_out
+
+
+==================================================================================================================
+block module demo
+=================
+---
+ - name: Ansible block module examples
+   hosts: linux
+   become: yes
+   tasks:
+     
+     - block:
+
+         - name: list out the files from cricket
+           command: "ls -lrt /home/ansadmin/cricket"
+           register: cricket_out 
+
+         - name: list out the files from tennis
+           command: "ls -lrt /home/ansadmin/tennis"
+           register: tennis_out
+
+         - name: list out the files from hockey
+           command: "ls -lrt /home/ansadmin/hockey"
+           register: hockey_out
+
+         - name: list out the files from kabaddi
+           command: "ls -lrt /home/ansadmin/kabaddi"
+           register: kabaddi_out
+        
+       ignore_errors: true
+    
+    
+     - debug:
+         var: tennis_out
+     - debug:
+         var: cricket_out
+     - debug:
+         var: hockey_out
+     - debug:
+         var: kabaddi_out
+
+
+---
+ - name: Ansible block module examples
+   hosts: linux:ubuntu
+   tasks:
+
+     - block:
+         - name: Install httpd on Redhat family
+           yum:
+             name: httpd
+             state: present
+         - name: start the httpd service on Redhat family
+           service:
+             name: httpd
+             state: started
+       when: ansible_os_family =='RedHat'
+       become: yes
+
+     - block:
+         - name: Install apache2 on Debian family
+           apt:
+             update_cache: yes
+             name: apache2
+             force_apt_get: yes
+         - name: start the apache2 service on Debian family
+           service:
+             name: apache2
+             state: started
+       when: ansible_os_family =='Debian'
+       become: yes
+                     
+
+---
+ - name: Ansible block module examples
+   hosts: linux
+   become: yes
+   tasks:
+     - block:
+         - name: list out the files from cricket
+           command: "ls -lrt /home/ansadmin/hockey"
+           register: cricket_out
+
+       rescue:
+         - debug:
+             msg: "There is no directory /home/ansadmin/hockey"
+
+       always:
+         - debug:
+             msg: "Task successfully completed ...."
+         - debug:
+             var: cricket_out
+
+
+==================================================================================================================
+Ansible reusable (import/include)
+=================================
+
+---
+ - name: Ansible import/include module examples
+   hosts: linux:ubuntu
+   become: yes
+   
+   tasks:
+     - name: Install httpd on Redhat family
+       yum:
+         name: httpd
+         state: present
+       when: ansible_os_family =='RedHat'
+
+     - name: Install open java rpm on Redhat family
+       yum:
+         name: https://corretto.aws/downloads/latest/amazon-corretto-8-x64-linux-jdk.rpm
+         state: present
+       when: ansible_os_family =='RedHat'
+
+     - name: Install apache2 on Debian family
+       apt:
+         update_cache: yes
+         name: apache2
+         state: present
+         force_apt_get: yes
+       when: ansible_os_family =='Debian'
+
+     - name: Install jdk package on Debian server
+       apt:
+         update_cache: yes
+         name: openjdk-8-jdk
+       when: ansible_os_family =='Debian'
+
+
+
+---
+ - name: Ansible import/include module examples
+   hosts: linux:ubuntu
+   become: yes
+   tasks:
+     - import_tasks: install_pkgs_RedHat.yml
+       when: ansible_os_family =='RedHat'
+
+     - import_tasks: install_pkgs_Debian.yml
+       when: ansible_os_family =='Debian'
+
+---
+ - name: Ansible import/include module examples
+   hosts: linux:ubuntu
+   become: yes
+   tasks:
+     - import_tasks: install_pkgs_RedHat.yml
+       when: ansible_os_family =='RedHat'
+
+     - include_tasks: install_pkgs_Debian.yml
+       when: ansible_os_family =='Debian'
+
+---
+ - name: Ansible import/include module examples
+   hosts: linux:ubuntu
+   become: yes
+   tasks:
+     - include_tasks: install_pkgs_{{ ansible_os_family }}.yml
+       when: ansible_os_family =='RedHat'
+
+     - include_tasks: install_pkgs_{{ ansible_os_family }}.yml
+       when: ansible_os_family =='Debian'
+  
+install_pkgs_RedHat
+===================
+---
+ - name: Install httpd on Redhat family
+   yum:
+     name: httpd
+     state: present
+ - name: Install open java rpm on Redhat family
+   yum:
+     name: https://corretto.aws/downloads/latest/amazon-corretto-8-x64-linux-jdk.rpm
+     state: present
+
+
+install_pkgs_Debian
+===================
+---
+ - name: Install apache2 on Debian family
+   apt:
+     update_cache: yes
+     name: apache2
+     force_apt_get: yes
+
+ - name: Install jdk package on Debian server
+   apt:
+     update_cache: yes
+     name: openjdk-8-jdk
+     force_apt_get: yes
+
+=======================vars==========
+
+required_vars_RedHat.yml
+========================
+---
+ pkg: httpd
+
+required_vars_Debian.yml
+========================
+---
+ pkg: apache2
+
+
+---
+ - name: Ansible import/include module examples
+   hosts: linux:ubuntu
+   gather_facts: true
+   become: yes
+   tasks:
+     - include_vars: required_vars_{{ ansible_os_family}}.yml
+     - debug:
+         msg: "Pkg name= {{ pkg }}"
+
+==================================================================================================================
+Temlates Demo
+=============
+---
+ - name: Ansible block/template module examples
+   hosts: webservers
+   tasks:
+     - block:
+         - name: Install httpd on Redhat family
+           yum:
+             name: httpd
+             state: present
+
+         - name: copy the jinja template
+           template:
+             src: tempdynamic.html.j2
+             dest: /var/www/html/tempdynamic.html
+
+         - name: start the httpd service on Redhat family
+           service:
+             name: httpd
+             state: started
+       when: ansible_os_family =='RedHat'
+       become: yes
+     
+     - block:
+         - name: Install apache2 on Debian family
+           apt:
+             update_cache: yes
+             name: apache2
+             force_apt_get: yes
+
+         - name: copy the jinja template
+           template:
+             src: tempdynamic.html.j2
+             dest: /var/www/html/tempdynamic.html
+
+         - name: start the apache2 service on Debian family
+           service:
+             name: apache2
+             state: started
+       when: ansible_os_family =='Debian'
+       become: yes
+     - debug:
+         msg: "playbook execution completed"
+         
+tempdynamic.html.j2
+===================
+<html>
+<head>
+<center>
+<title> Ansible Templet Module Demo </title>
+</center>
+</head>
+<h2> The hostname of this webserver is {{ ansible_hostname }} </h2>
+<h2> It is running on {{ ansible_os_family}} system </h2>
+<html>
+
+========================================================================
+
+---
+ - name: Ansible block/template module examples
+   hosts: webservers
+   tasks:
+     - block:
+         - name: Install httpd on Redhat family
+           yum:
+             name: httpd
+             state: present
+
+         - name: copy the jinja template
+           template:
+             src: testdynamaic.txt.j2
+             dest: /home/ansadmin/testdynamaic.txt
+
+         - name: start the httpd service on Redhat family
+           service:
+             name: httpd
+             state: started
+       when: ansible_os_family =='RedHat'
+       become: yes
+
+     - block:
+         - name: Install apache2 on Debian family
+           apt:
+             update_cache: yes
+             name: apache2
+             force_apt_get: yes
+
+         - name: copy the jinja template
+           template:
+             src: testdynamaic.txt.j2
+             dest: /home/ansadmin/testdynamaic.txt
+
+         - name: start the apache2 service on Debian family
+           service:
+             name: apache2
+             state: started
+       when: ansible_os_family =='Debian'
+       become: yes
+     - debug:
+         msg: "playbook execution completed"
+
+
+testdynamaic.txt.j2
+===================
+                                    Host Details
+									============
+									
+									
+
+Ansible system version is                 ===============>>>    {{ ansible_system }}
+
+Ansible OS family is                      ===============>>>    {{ ansible_os_family }}
+
+Ansible server FDQN is                    ===============>>>    {{ ansible_fqdn }}
+
+Ansible hostname is                       ===============>>>    {{ ansible_hostname }}
+
+Ansible domain is                         ===============>>>    {{ ansible_domain }}
+
+Ansible distribution is                   ===============>>>    {{ ansible_distribution }}
+
+Ansible BIOS date is                      ===============>>>    {{ ansible_bios_date }}
+
+Ansible BIOS version is                   ===============>>>    {{ ansible_bios_version }}
+
+Ansible architecture is                   ===============>>>    {{ ansible_architecture }}
+
+ansible_managed is                        ===============>>>    {{ ansible_managed }}
+
+local_ip is 						      ===============>>>    {{ ansible_default_ipv4["address"] }}
+
+local_user is 							  ===============>>>    {{ ansible_user }}
+
+template_host is                          ===============>>>    {{ template_host }}
+																					
+template_uid is                           ===============>>>    {{ template_uid }}
+													
+template_path is                          ===============>>>    {{ template_path }}		
+																							
+template_fullpath is                      ===============>>>    {{ template_fullpath }}	
+																								
+template_run_date is                      ===============>>>    {{ template_run_date }}
+
+
+============================
+
+---
+ - name: Ansible block/template module examples
+   hosts: webservers
+   tasks:
+     - block:
+         - name: Install httpd on Redhat family
+           yum:
+             name: httpd
+             state: present
+
+         - name: copy the jinja template
+           template:
+             src: hostloops.txt.j2
+             dest: /home/ansadmin/testdynamaic.txt
+
+         - name: start the httpd service on Redhat family
+           service:
+             name: httpd
+             state: started
+       when: ansible_os_family =='RedHat'
+       become: yes
+
+     - block:
+         - name: Install apache2 on Debian family
+           apt:
+             update_cache: yes
+             name: apache2
+             force_apt_get: yes
+
+         - name: copy the jinja template
+           template:
+             src: hostloops.txt.j2
+             dest: /home/ansadmin/testdynamaic.txt
+
+         - name: start the apache2 service on Debian family
+           service:
+             name: apache2
+             state: started
+       when: ansible_os_family =='Debian'
+       become: yes
+     - debug:
+         msg: "playbook execution completed"
+
+
+hostloops.txt.j2
+================
+
+
+List of IP Addresses in the webservers group:
+---------------------------------------------
+
+{% for host in groups['webservers'] %}
+   - {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}
+{% endfor %}
+
+=====================================
+{% for host in groups['webservers'] %}
+    {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}
+{%- endfor %}
+
+
+List of IP Addresses in the webservers groups exposing static port:
+-------------------------------------------------------------------
+
+{% for host in groups['webservers'] %}
+  - {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:8080
+{% endfor %}
+
+specific ip: {{ hostvars[groups['webservers'][0]]['ansible_eth0']['ipv4']['address'] }}
+
+specific ip: {{ hostvars[groups['webservers'][1]]['ansible_eth0']['ipv4']['address'] }}
+
+listen: {{ hostvars[ansible_host]['ansible_eth0']['ipv4']['address'] }}:8080
+
+Index: Server_{{groups['webservers'].index(inventory_hostname)+1}}
+
+        {% for url_host in groups["webservers"] %}
+  {%- if url_host == inventory_hostname -%}
+broker.id={{loop.index0}}
+  {% endif %}
+{% endfor %}
+
+
+{% for url_host in groups["webservers"] %}
+  {%- if url_host == inventory_hostname -%}
+advertised.listeners=PLAINTEXT://{{url_host}}:9092
+  {% endif %}
+{% endfor %}
+
+
+
+{% for url_host in groups["webservers"] %}
+{%- if url_host == ansible_fqdn or url_host in ansible_all_ipv4_addresses -%}
+server.{{loop.index}}=0.0.0.0:2888:3888
+{% else %}
+server.{{loop.index}}={{url_host}}:2888:3888
+{% endif %}
+{% endfor %}
+
+{% for host in groups['webservers'] %}
+{% if host == inventory_hostname %}
+{{ loop.index }}
+{% endif %}
+{% endfor %}
+
+
+
+json format: {{ groups['webservers'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list | to_json }}
+
+zookeeper.connect={% for name in groups["webservers"] %}{{name}}:2181{% if not loop.last %},{% endif %}{% endfor %}
+
+
+
+==================================================================================================================
+Handlers demo
+=============
+---
+ - hosts: linux
+   become: yes
+   tasks:
+     - name: install httpd
+       yum:
+         name: httpd
+         update_cache: yes
+         state: latest
+       notify:
+         - start httpd
+   handlers:
+     - name: start httpd
+       service:
+         name: httpd
+         state: restarted
+
+
+
+==================================================================================================================
+Roles Demo
+==========
+/home/ansadmin
+mkdir myroles/
+mkdir roles
+cd /home/ansadmin/myroles/roles
+ansible-galaxy init samplerole
+
+======================================
+
+defaults/main.yml
+
+---
+# defaults file for samplerole
+  system_manager: admin@psddevops.com
+
+files/files_demo.txt
+
+cat files_demo.txt
+This is sample files module demo
+
+handlers/main.yml
+cat main.yml
+
+# handlers file for samplerole
+  - name: handler section execution
+    command: " ls -lrt /home/ansadmin/ "
+
+meta/main.yml
+cat main.yml
+galaxy_info:
+  author: Pushpanath
+  description: Technical Lead
+  company: HCL Technologies Pvt Ltd.
+
+templates/sample_templates.txt.j2
+
+cat sample_templates.txt.j2
+Welcome to {{ ansible_hostname }}
+
+This file was created on {{ ansible_date_time.date }}
+Stay home if you don't have any work
+
+Contact {{ system_manager }} if anything is wrong
+
+vars/main.yml
+cat main.yml
+---
+# vars file for samplerole
+
+my_content: "This file created using roles  concept,Created by PSD Devops"
+name: "Sachin Tendulkar"
+game: "Cricket"
+place: "Mumbai"
+country: "India"
+
+tasks/main.yml
+
+---
+# tasks file for samplerole
+- name: Copy the static file from remote to mgmt machines
+  copy: src=files_demo.txt dest=/home/ansadmin/
+
+- name: Copy the template file from remote to mgmt machines
+  copy: src=files_demo.txt dest=/home/ansadmin/
+
+- name: copy the jinja template
+  template:
+    src: sample_templates.txt.j2
+    dest: /home/ansadmin/sample_templates.txt
+
+- debug:
+    msg: " I am from {{ name }} coming from {{ place }} located in {{ country }} and playing {{ game }}"
+
+- name: Executing the handlers task
+  command: " ls -lrt /home/ "
+  notify: handler section execution
+
+==================================================
+---
+- hosts: webservers
+  become: yes
+  roles:
+    - samplerole
+
+
+/home/ansadmin/myroles >> ansible-playbook samplerole.yml -i ./hosts
+/home/ansadmin/myroles
+ansible-playbook /home/ansadmin/myroles/samplerole.yml -i ./hosts
+
+================================*********************=============
+
+cd /home/ansadmin/myroles/roles
+ansible-galaxy init myapache
+
+defaults/main.yml
+=================
+cat main.yml
+---
+# defaults file for myapache
+class: Ansible
+institute: PSD Devops
+
+files/mystatic.html
+===================
+cat mystatic.html
+<html>
+<head>
+<center>
+<h1> Ansible Roles_Files Module Demo </h1>
+</center>
+</head>
+<h2> Ansible Roles_Files Module Demo example file </h2>
+</html>
+
+handlers/main.yml
+=================
+cat main.yml
+
+cat main.yml
+---
+# handlers file for myapache
+- name: restart httpd
+  service:
+     name: httpd
+     state: restarted
+  when: ansible_os_family =='RedHat'
+
+
+- name: restart apache2
+  service:
+    name: apache2
+    state: started
+  when: ansible_os_family =='Debian'
+
+
+tasks/main.yml
+==============
+
+cat main.yml
+============
+
+---
+# tasks file for myapache
+- name: Install httpd on Redhat family
+  yum:
+    name: "{{ pkg_redhat }}"
+    state: present
+  notify: restart httpd
+  when: ansible_os_family =='RedHat'
+
+- name: Install apache2 on Debian family
+  apt:
+    update_cache: yes
+    name: "{{ pkg_ubuntu }}"
+    force_apt_get: yes
+  notify: restart apache2
+  when: ansible_os_family =='Debian'
+
+- name: copy the jinja template
+  template:
+    src: mydynamic.html.j2
+    dest: /var/www/html/mydynamic.html
+
+- name: copy the file to remote servers
+  copy:
+    src: mystatic.html
+    dest: /var/www/html/mystatic.html
+
+templates/mydynamic.html
+
+cat mydynamic.html.j2
+===================
+
+<html>
+<head>
+<center>
+<h1> Ansible Roles template Module Demo </h1>
+</center>
+</head>
+<h2> We are conducting {{ class }} on {{ institute }} technologies </h2>
+<h2> The hostname of this webserver is {{ ansible_hostname }} </h2>
+<h2> It is running on {{ ansible_os_family }} system </h2>
+</html>
+
+
+vars/main.yml
+
+pkg_ubuntu: "apache2"
+pkg_redhat: "httpd"
+---
+- hosts: webservers
+  become: yes
+  roles:
+    - myapache
+
+
+
+==================================================================================================================
+Serial/Rolling update demo
+==========================
+- hosts: all
+  become: yes
+  serial: 4
+  tasks:
+    - name: Disable the server {{ inventory_hostname }}
+      debug:
+        msg: "Disable the server {{ inventory_hostname }}"
+
+    - name: Update the server {{ inventory_hostname }}
+      debug:
+        msg: "Update the server {{ inventory_hostname }}"
+
+    - name: Enable the server {{ inventory_hostname }}
+      debug:
+        msg: "Enable the server {{ inventory_hostname }}"
+        
+        
+==================================================================================================================
+
+---
+- name: Playbook to install web application
+  hosts: all
+  become: yes
+  vars:
+    username: psddevops
+    token: 656fb732ecf770286343dae118a1f1711d886d5d
+    repo_name: sampletest
+
+  tasks:
+    - name: install Git
+      become: yes
+      yum:
+        name: git
+        state: present
+      register: git_output
+
+    - debug:
+        var: git_output
+
+    - name: Checkout The Code From Github Using Ansible.
+      git:
+        repo: 'https://{{ token }}@github.com/{{ username }}/{{ repo_name }}.git'
+        dest: /home/ansadmin/psddevops
+      register: git_checkout
+      ignore_errors: true
+
+    - debug:
+        var: git_checkout
+    - name: download and install java rpm
+      yum:
+        name: https://corretto.aws/downloads/latest/amazon-corretto-8-x64-linux-jdk.rpm
+        state: present
+      register: java_output
+    - debug:
+        var: java_output
+    - name: crate a directory
+      become: yes
+      file:
+        path: "/opt/tomcat8"
+        state: directory
+        mode: 0777
+
+    - name: Download and install tomcat
+      unarchive:
+        src: "https://mirrors.estointernet.in/apache/tomcat/tomcat-8/v8.5.57/bin/apache-tomcat-8.5.57.tar.gz"
+        dest: "/opt/tomcat8/"
+        mode: 0777
+        remote_src: yes
+      register: tcinstall
+    - debug:
+        var: tcinstall
+    - name: Download and install maven
+      unarchive:
+        src: "https://mirrors.estointernet.in/apache/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz"
+        dest: "/opt/"
+        mode: 0755
+        remote_src: yes
+      register: maveninstall
+    - debug:
+        var: maveninstall
+    - name: maven configuration and compilateion
+      shell: |
+        echo -e "\n rename the maven"
+        cd /opt
+        mv apache-maven-3.6.3 maven
+        echo -e "\n setting the path for maven"
+        PATH=$PATH:/opt/maven/bin:/usr/lib/jvm/java-1.8.0-amazon-corretto/bin
+        export PATH
+        cd /home/ansadmin/psddevops
+        mvn clean package
+        cp ./target/psdapp.war /opt/tomcat8/apache-tomcat-8.5.57/webapps
+    - name: crete group "tomcat"
+      group:
+        name: tomcat
+        state: present
+      ignore_errors: true
+
+    - name: Add the user 'tomcat'
+      user:
+        name: tomcat
+        group: tomcat
+      ignore_errors: true
+    - name: create a link
+      file:
+        src:  /opt/tomcat8/apache-tomcat-8.5.57
+        dest: /usr/share/tomcat8
+        state: link
+        force: yes
+
+    - name: Change ownership of Tomcat installation
+      file: path=/usr/share/tomcat8/ owner=tomcat group=tomcat state=directory recurse=yes
+      ignore_errors: true
+
+    - name: Configure Tomcat as a service
+      copy: src=tomcat-initscript.sh dest=/etc/init.d/tomcat mode=0777
+      ignore_errors: true
+
+    - name: Start the tomcat
+      systemd:
+        name: tomcat
+        state: restarted
+        enabled: yes
+
+tomcat-initscript.sh
+====================
+
+#!/bin/bash
+#
+# chkconfig: 345 99 28
+# description: Starts/Stops Apache Tomcat
+#
+# Tomcat 7 start/stop/status script
+# Forked from: https://gist.github.com/valotas/1000094
+# @author: Miglen Evlogiev <bash@miglen.com>
+#
+# Release updates:
+# Updated method for gathering pid of the current proccess
+# Added usage of CATALINA_BASE
+# Added coloring and additional status
+# Added check for existence of the tomcat user
+#
+
+#Location of JAVA_HOME (bin files)
+export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto
+
+#Add Java binary files to PATH
+export PATH=$JAVA_HOME/bin:$PATH
+
+#CATALINA_HOME is the location of the bin files of Tomcat
+export CATALINA_HOME=/opt/tomcat8/apache-tomcat-8.5.57
+
+#CATALINA_BASE is the location of the configuration files of this instance of Tomcat
+export CATALINA_BASE=/usr/share/tomcat8
+
+#TOMCAT_USER is the default user of tomcat
+export TOMCAT_USER=tomcat
+
+#TOMCAT_USAGE is the message if this script is called without any options
+TOMCAT_USAGE="Usage: $0 {\e[00;32mstart\e[00m|\e[00;31mstop\e[00m|\e[00;32mstatus\e[00m|\e[00;31mrestart\e[00m}"
+
+#SHUTDOWN_WAIT is wait time in seconds for java proccess to stop
+SHUTDOWN_WAIT=20
+
+tomcat_pid() {
+        echo `ps -fe | grep $CATALINA_BASE | grep -v grep | tr -s " "|cut -d" " -f2`
+}
+
+start() {
+  pid=$(tomcat_pid)
+  if [ -n "$pid" ]
+  then
+    echo -e "\e[00;31mTomcat is already running (pid: $pid)\e[00m"
+  else
+    # Start tomcat
+    echo -e "\e[00;32mStarting tomcat\e[00m"
+    #ulimit -n 100000
+    #umask 007
+    #/bin/su -p -s /bin/sh tomcat
+        if [ `user_exists $TOMCAT_USER` = "1" ]
+        then
+                su $TOMCAT_USER -c $CATALINA_HOME/bin/startup.sh
+        else
+                sh $CATALINA_HOME/bin/startup.sh
+        fi
+        status
+  fi
+  return 0
+}
+
+status(){
+          pid=$(tomcat_pid)
+          if [ -n "$pid" ]; then echo -e "\e[00;32mTomcat is running with pid: $pid\e[00m"
+          else echo -e "\e[00;31mTomcat is not running\e[00m"
+          fi
+}
+
+stop() {
+  pid=$(tomcat_pid)
+  if [ -n "$pid" ]
+  then
+    echo -e "\e[00;31mStoping Tomcat\e[00m"
+    #/bin/su -p -s /bin/sh tomcat
+        sh $CATALINA_HOME/bin/shutdown.sh
+
+    let kwait=$SHUTDOWN_WAIT
+    count=0;
+    until [ `ps -p $pid | grep -c $pid` = '0' ] || [ $count -gt $kwait ]
+    do
+      echo -n -e "\n\e[00;31mwaiting for processes to exit\e[00m";
+      sleep 1
+      let count=$count+1;
+    done
+
+    if [ $count -gt $kwait ]; then
+      echo -n -e "\n\e[00;31mkilling processes which didn't stop after $SHUTDOWN_WAIT seconds\e[00m"
+      kill -9 $pid
+    fi
+  else
+    echo -e "\e[00;31mTomcat is not running\e[00m"
+  fi
+
+  return 0
+}
+
+user_exists(){
+        if id -u $1 >/dev/null 2>&1; then
+        echo "1"
+        else
+                echo "0"
+        fi
+}
+
+case $1 in
+
+        start)
+          start
+        ;;
+
+        stop)
+          stop
+        ;;
+
+        restart)
+          stop
+          start
+        ;;
+
+        status)
+                status
+
+        ;;
+
+        *)
+                echo -e $TOMCAT_USAGE
+        ;;
+esac
+exit 0
+
+============================================================================
+---
+- name: retrieve the file realpath
+  shell: "realpath {{ file }}"
+  register: realpath
+
+- name: storing realpath
+  set_fact:
+    FILE_REALPATH: "{{ realpath.stdout }}"
+
+- name: printing FILE_REALPATH value
+  debug:
+    msg: "printing FILE_REALPATH value: {{ FILE_REALPATH }}"
+
+- name: retrieve the file folder
+  shell: "dirname {{ FILE_REALPATH }}"
+  register: filefolder
+
+- name: storing file folder value
+  set_fact:
+    FILE_FOLDER: "{{ filefolder.stdout }}"
+
+- name: printing FILE_FOLDER value
+  debug:
+    msg: "printing FILE_FOLDER value: {{ FILE_FOLDER }}"
+
+
+- name: retrieve the file name
+  shell: "basename {{ FILE_REALPATH }}"
+  register: filename
+
+- name: storing file name value
+  set_fact:
+    FILE_NAME: "{{ filename.stdout }}"
+
+- name: printing FILE_NAME value
+  debug:
+    msg: "printing FILE_NAME value: {{ FILE_NAME }}"
+
+- name: retrieve the file out
+  shell: "echo {{ FILE_NAME}}|sed 's/properties.template/properties/'"
+  register: fileout
+
+- name: storing file out value
+  set_fact:
+    FILE_OUT: "{{ fileout.stdout }}"
+
+- name: printing FILE_OUT value
+  debug:
+    msg: "printing FILE_OUT value: {{ FILE_OUT }}"
+
+- name: storing the original file content
+  shell: "cat {{ file }}"
+  register: filedata
+
+- name: print the original file content
+  debug:
+    msg: "{{ filedata.stdout_lines }}"
+
+- name: substitute the env
+  shell: "envsubst < {{ FILE_FOLDER }}/{{ FILE_NAME }} > {{ FILE_FOLDER }}/{{ FILE_OUT }}"
+  register: envdata
+
+- name: print the envdata
+  debug:
+    msg: "{{ envdata.cmd }}"
+
+- name: output of the final file
+  shell: "cat {{ FILE_FOLDER }}/{{ FILE_OUT }}"
+  register: finalfile
+
+- name: final file content
+  debug:
+    msg: "{{ finalfile.stdout_lines }}"
+    
+ ===================
+ 
+ ---
+  - name: loop testing
+    hosts: all
+
+    tasks:
+      - name: looking for .tempate files
+        command: "find /home/ansadmin/test /home/ansadmin/sample -name '*.template'"
+        register: ITEMS
+
+      - name: retrieving data
+        debug:
+          msg: "this is {{ITEMS.stdout_lines}}"
+
+      - include: fileprocess.yaml file={{ item }}
+        with_items: {{ITEMS.stdout_lines}}
