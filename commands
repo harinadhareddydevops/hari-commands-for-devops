@@ -65,7 +65,7 @@ cat id_rsa.pub >>copy and paste
 32. aws s3 cp app.zip(file) s3-------------------------//application-rct-cloud(bucket name)/app.zip(same file)-----copy local to s3 
 33.aws s3 cp s3-------------------------//application-rct-cloud/app.zip . -----copy from s3 to local
 34.scp -i privateKey fileNametoCopy user@publicIP-------------------------/path ----copy file from local to ec2 server
-35. .scp -i pem pem ec2-user@publicIP-------------------------/home/ec2-user/
+35.scp -i pem pem ec2-user@publicIP-------------------------/home/ec2-user/
 36.aws sts get-caller-identity ------get all aws account details
 37.whoami----username
 38.hostname---servername
